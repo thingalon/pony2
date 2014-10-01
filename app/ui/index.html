@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hello World!</title>
+
+		<!-- 3rd party things -->
+		<link rel="stylesheet" type="text/css" href="vendor/font-awesome/css/font-awesome.css">
+		
+		<!-- Pony things -->
+		<link rel="stylesheet" type="text/css" href="style/main.css">
+		<script src="filedialog.js"></script>
+		<script src="jobhandle.js"></script>
+		<script src="tools.js"></script>
+	</head>
+	<body>
+		<div class="overlay-layer">
+		</div>
+	
+		<h1>Hello World!</h1>
+		We are using node.js <script>document.write(process.version)</script>
+		and atom-shell <script>document.write(process.versions['atom-shell'])</script>.
+		
+		<template id="file-dialog-template">
+			<div class="overlay">
+				<div class="dialog file-dialog">
+					<span class="title">
+						Open File
+					</span>
+					<div class="content">
+						<div class="top-bar">
+							<input class="path" type="text">
+							<button class="up fa fa-level-up" title="Parent Directory"></button>
+							<button class="refresh fa fa-refresh" title="Refresh"></button>
+						</div>
+						<div class="columns">
+							<div class="folders"></div>
+							<div class="files"></div>
+						</div>
+						<div class="button-bar">
+							<button class="cancel">Cancel</button>
+							<button class="ok">OK</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</template>
+	</body>
+	
+	<script>
+		window.$ = window.jQuery = require('./vendor/jquery/jquery-2.1.1.min.js');
+		new FileDialog( {
+			path: 'ssh://foo@bar.com/~/',
+		} );
+	</script>
+</html>

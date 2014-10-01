@@ -1,0 +1,101 @@
+body {
+	font-family: Tahoma, Geneva, sans-serif;
+	font-size: 10pt;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	user-select: none;
+	cursor: default;
+}
+
+/* Overlays and dialogs */
+div.overlay-layer {
+	position: absolute;
+	width: 100%;
+	top: 0;
+	left: 0;
+	z-index: 1000;
+}
+
+div.dialog {
+	display: flex;
+	flex-direction: column;
+
+	position: relative;
+	margin-left: auto;
+	margin-right: auto;
+	top: 0px;
+
+	border: solid black;
+	border-width: 0 1px 1px;
+	box-shadow: 1px 1px 10px #888;
+}
+
+div.dialog span.title {
+	display: block;
+	border-bottom: 1px solid black;
+	background-color: #ddd;
+	padding: 10px;
+	font-weight: bold;
+}
+
+div.dialog div.content {
+	flex-grow: 100;
+	background-color: #f5f5f5;	
+}
+
+div.dialog div.button-bar {
+	padding: 10px;
+	text-align: right;
+}
+
+div.dialog div.button-bar button {
+	width: 8em;
+	padding: 4px;
+	margin: 5px;
+}
+
+/* File dialog */
+div.file-dialog {
+	width: 800px;
+	height: 450px;
+}
+
+div.file-dialog div.content {
+	display: flex;
+	flex-direction: column;
+}
+
+div.file-dialog div.top-bar {
+	display: flex;
+	flex-direction: row;
+}
+
+div.file-dialog input.path {
+	flex-grow: 100;
+	padding: 2px 10px;
+	border: none;
+	margin: 0px;
+}
+
+div.file-dialog div.columns {
+	flex-grow: 100;
+	display: flex;
+	flex-direction: row;
+	border: solid #aaa;
+	border-width: 1px 0;
+}
+
+div.file-dialog div.folders {
+	width: 15em;
+	border-right: 1px solid #aaa;
+}
+				
+div.file-dialog div.files {
+	flex-grow: 100;
+	background-color: white;
+}
+
+div.file-dialog div.files.loading {
+	background-color: gray;
+	content: 'Loading...';
+}
