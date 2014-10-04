@@ -2,8 +2,11 @@
 //	Job - a potentially long-running request (eg: "get file contents", "read directory")
 //
 
+var Tools = require( './common/tools.js' );
+var Type = require( './common/type.js' );
+var Host = require( './host.js' );
+
 var ipc = require( 'ipc' );
-var Connection = require('ssh2');
 
 var jobs = {};
 var nextJobId = 0;
@@ -30,7 +33,7 @@ Job.getById = function( jobId ) {
 
 Job.prototype.start = function() {
 	if ( jobTypes[ this.job ] )
-		jobTypes[ this.job ]( this );
+		jobTypes[ this.job ]( this, this.args );
 	else
 		this.fail( 'system', 'Unknown job type: ' + this.job );
 }
@@ -73,6 +76,13 @@ Job.prototype.getPathType = function() {
 	return Tools.getPathType( this.args.path );
 }
 
+//	Send this job off to be processed by the specified host, opening a new conneciton if necessary
+Job.prototype.sendToHost = function( user, hostname ) {
+	var host = Host.find( user, hostname, true );
+	this.host = host;
+	host.handleJob( this );
+}
+
 //	Export Job class.
 module.exports = Job;
 
@@ -81,41 +91,15 @@ module.exports = Job;
 //
 
 var jobTypes = {
-
-	//	Dummy test job; just connects to a server and tries the connection.
-	test_connection: function( job ) {
-		var conn = new Connection();
-		var result = '';
-		
-		conn.on('ready', function() {
-  			console.log('Connection :: ready');
-			conn.exec('date', function(err, stream) {
-	   			if (err) throw err;
-    			stream.on('exit', function(code, signal) {
-					console.log('Stream :: exit :: code: ' + code + ', signal: ' + signal);
-					job.done( result );
-				}).on('close', function() {
-					console.log('Stream :: close');
-					conn.end();
-				}).on('data', function(data) {
-					console.log('STDOUT: ' + data);
-					result += data;
-				}).on('error', function(err) {
-					job.fail( 'connection-error', err );
-				}).stderr.on('data', function(data) {
-					console.log('STDERR: ' + data);
-				});
-	  		});
-		});
-
-		conn.connect({
-	  		host: 'put a host here.',
-  			port: 22,
-	  		username: 'put a username here',
-	  		agent: process.env.SSH_AUTH_SOCK,
-		});
-	},
 	
+	ls: function( job, args ) {
+		var splitPath = Tools.splitPath( args.path );
+		if ( splitPath.type == Type.path.local )
+			return job.fail( 'not-implemented', "This wouldn't be a real PonyEdit if local paths worked before remote ones." );
+		
+		job.sendToHost( splitPath.user, splitPath.host );
+	},	
+
 };
 
 //

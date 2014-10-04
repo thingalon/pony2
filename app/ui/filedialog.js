@@ -24,9 +24,8 @@ FileDialog.prototype.showPath = function( path ) {
 	this.e.find( 'div.files' ).empty().addClass( 'loading' );
 	
 	//	Fetch folder content
-	var self = this;
 	this.lsJob = new JobHandle( {
-		job: 'test_connection',	//	Change me to 'ls' when ls is written.
+		job: 'ls',
 		args: {
 			path: path,
 		},
