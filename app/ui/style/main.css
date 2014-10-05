@@ -68,6 +68,7 @@ div.file-dialog div.content {
 div.file-dialog div.top-bar {
 	display: flex;
 	flex-direction: row;
+	min-height: 25px;
 }
 
 div.file-dialog input.path {
@@ -93,6 +94,7 @@ div.file-dialog div.folders {
 div.file-dialog div.files {
 	flex-grow: 100;
 	background-color: white;
+	overflow: scroll;
 }
 
 div.file-dialog div.files.loading {

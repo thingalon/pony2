@@ -68,6 +68,9 @@ function _bin_decode( wb ) {
 		case 'i':	//	int32
 			return _dec_int32( wb );
 		
+		case 'c':	//	Character
+			return String.fromCharCode( _dec_uint8( wb ) );
+		
 		default:
 			console.log( 'WARNING: Unrecognized type ' + type + ' (' + type.charCodeAt( 0 ) + ') at ' + ( wb.cursor - 1 ) + ' / ' + wb.buffer.length );
 			return null;

@@ -22,6 +22,10 @@ function JobHandle( args ) {
 
 JobHandle.handles = {};
 
+JobHandle.prototype.getArg = function( name ) {
+	return this.args.args[ name ];
+}
+
 JobHandle.prototype.checkState = function() {
 	//	Check if the job is done.
 	switch ( this.status.state ) {

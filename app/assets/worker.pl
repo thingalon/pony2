@@ -6,7 +6,12 @@ use strict;
 use Scalar::Util qw(looks_like_number);
 use IO::Socket::INET;
 use Data::Dumper;
+use Fcntl qw(:mode);
 use Encode qw(decode encode);
+
+our %job_types = (
+	'ls' => \&job_ls,
+);
 
 $| = 1;	# Autoflush.
 main();
@@ -96,7 +101,17 @@ sub connection_loop {
 	while ( 1 ) {
 		my $packet = read_packet( $socket );
 		my $message = bin_decode( $packet );
-		my $response = bin_encode( $message );
+		my $result = undef;
+		
+		if ( $job_types{ $message->{'job'} } ){
+			$result = $job_types{ $message->{'job'} }->( $message->{'args'} );
+		} else {
+			$result = {
+				'error' => 'Unrecognized job type: ' . $message->{'job'},
+			};
+		}
+		
+		my $response = bin_encode( $result );
 		send_packet( $socket, $response );
 	}
 }
@@ -272,5 +287,45 @@ sub _bin_encode {
 		}
 	}
 
+}
+
+sub expand_path {
+	my ( $path ) = @_;
+	my $home_dir = $ENV{HOME};
+	
+	$path =~ s/^~\//$home_dir\//;
+
+	return $path;
+}
+
+#
+#	Jobs
+#
+
+sub job_ls {
+	my ( $args ) = @_;
+	my $include_hidden = $args->{'hidden'};
+	my $path = expand_path( $args->{'path'} );
+	my $entries = {};
+	
+	opendir DIR, $path;
+	while ( my $filename = readdir DIR ) {
+		next if ( ! $include_hidden && $filename =~ /^\./ );
+		next if ( $filename eq '.' | $filename eq '..' );
+		
+		my ( $dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size,
+			$atime, $mtime, $ctime, $blksize, $blocks ) = stat( "$path/$filename" );
+		
+		my $flags = 
+			( S_ISDIR( $mode ) ? 'd' : '' ) .
+			( ( -r "$path/$filename" ) ? 'r' : '' ) .
+			( ( -w "$path/$filename" ) ? 'w' : '' );
+		
+		$entries->{ $filename } = { 'f' => $flags, 's' => $size, 'm' => $mtime };
+	}
+	close DIR;
+
+	return { 'error' => 'Permission denied' } if ( scalar( keys %$entries ) == 0 && ! ( -r $path ) );
+	return { 'entries' => $entries };
 }
 

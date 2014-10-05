@@ -19,7 +19,7 @@ if ( isNode ) {
 	//	Split a path into its components
 	Tools.splitPath = function( path ) {
 		//	This is an ssh:// path?
-		var sshRegex = new RegExp( '^ssh://(?:([^@]+)@)?([^/]+)(/.*)$' );
+		var sshRegex = new RegExp( '^ssh://(?:([^@]+)@)?([^/]+)/?(.*)$' );
 		var result = sshRegex.exec( path );
 		if ( result ) {
 			return {

@@ -107,6 +107,7 @@ var jobTypes = {
 		if ( splitPath.type == Type.path.local )
 			return job.fail( 'not-implemented', "This wouldn't be a real PonyEdit if local paths worked before remote ones." );
 		
+		args.path = splitPath.path;
 		job.sendToHost( splitPath.user, splitPath.host );
 	},	
 

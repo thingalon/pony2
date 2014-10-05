@@ -42,7 +42,8 @@ WorkerTunnel.prototype.updateQueue = function() {
 	
 	//	Encode the job for sending.
 	var job = this.queue.shift();
-	var blob = job.encode();
+	this.currentJob = job;
+	var blob = job.encode();	
 	
 	//	Prepare a packet header
 	var header = new Buffer( 5 );
@@ -72,8 +73,16 @@ WorkerTunnel.prototype.onData = function( data ) {
 	if ( this.readBuffer.length >= length + 5 ) {
 		//	We have a complete packet! 
 		var message = Binary.decode( this.readBuffer, 5 );
-		console.log( message );
 		this.readBuffer = null;
+		
+		if ( message )
+			this.currentJob.done( message );
+		else
+			this.currentJob.fail( 'error', 'Null response' );
+		
+		this.currentJob = null;
+		this.busy = false;
+		this.updateQueue();
 	}	
 }
 

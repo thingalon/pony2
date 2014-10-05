@@ -202,7 +202,6 @@ Host.prototype.parseWorkerHeader = function( rawHeader ) {
 	rawHeader = rawHeader.substr( headMarker );
 	var lines = rawHeader.split( '\n' );
 	for ( var i = 0; i < lines.length; i++ ) {
-		console.log( lines[ i ] );
 		var pieces = lines[ i ].split( ':', 2 );
 		if ( pieces.length != 2 )
 			continue;
