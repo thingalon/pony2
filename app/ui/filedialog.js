@@ -44,7 +44,7 @@ FileDialog.prototype.lsSuccess = function( job, result ) {
 	var table = $( '<table>' );
 	
 	//	Header
-	var header = $( '<tr>' );
+	var header = $( '<tr>' ).addClass( 'head' );
 	var headings = [ 'Filename', 'Size', 'Last Modified' ];
 	for ( var i = 0; i < headings.length; i++ )
 		header.append( $( '<th>' ).html( headings[ i ] ) );
@@ -72,11 +72,12 @@ FileDialog.prototype.lsSuccess = function( job, result ) {
 	for ( var i = 0; i < keys.length; i++ ) {
 		var filename = keys[ i ];
 		var details = result.entries[ filename ];
+		var isDir = ( details.f.indexOf( 'd' ) !== -1 );
 		
 		var row = $( '<tr>' ).addClass( i % 2 ? 'second' : 'first' );
 		row.append( $( '<td>' ).html( filename ) );
-		row.append( $( '<td>' ).html( details.s ) );
-		row.append( $( '<td>' ).html( new Date( details.m ) ) );
+		row.append( $( '<td>' ).html( isDir ? '' : Tools.prettySize( details.s ) ) );
+		row.append( $( '<td>' ).html( details.m > 0 ? new Date( details.m * 1000 ).toLocaleString() : '' ) );
 
 		table.append( row );
 	}

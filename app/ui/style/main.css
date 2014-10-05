@@ -95,9 +95,35 @@ div.file-dialog div.files {
 	flex-grow: 100;
 	background-color: white;
 	overflow: scroll;
+	position: relative;
 }
 
 div.file-dialog div.files.loading {
 	background-color: gray;
-	content: 'Loading...';
+}
+
+div.file-dialog div.files table {
+	width: 100%;
+	table-layout: fixed;
+	position: absolute;
+	border-spacing: 0px;
+	border-collapse: collapse;
+}
+
+div.file-dialog div.files tr.head {
+	background-color: #eee;
+}
+
+div.file-dialog div.files tr td:not(:first-child) {
+	width: 150px;
+}
+
+div.file-dialog div.files th {
+	padding: 5px;
+	font-weight: normal;
+	border: 1px solid #ddd;
+}
+
+div.file-dialog div.files td {
+	padding: 2px 5px;
 }

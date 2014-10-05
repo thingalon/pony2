@@ -86,7 +86,7 @@ function _dec_uint8( wb ) {
 }
 
 function _dec_int32( wb ) {
-	var value = wb.buffer.readInt32BE( wb.length );
+	var value = wb.buffer.readInt32BE( wb.cursor );
 	wb.cursor += 4;
 	return value;
 }

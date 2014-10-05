@@ -36,6 +36,21 @@ if ( isNode ) {
 		}
 	}
 	
+	//	Display a filesize in a human-readable format
+	Tools.prettySize = function( size ) {
+		//	Using KB, MB, etc. Maybe we can add a config later for KiB / MiB if anyone cares.
+		if ( size < 1000 )
+			return size + ' B';
+		if ( size < 1000000 )
+			return ( size / 1000 ).toFixed( 1 ) + ' KB';
+		if ( size < 1000000000 )
+			return ( size / 1000000 ).toFixed( 1 ) + ' MB';
+		if ( size < 1000000000000 )
+			return ( size / 1000000000 ).toFixed( 1 ) + ' GB';
+		else
+			return ( size / 1000000000000 ).toFixed( 1 ) + ' TB';
+	}
+	
 } ( isNode ? exports : this.Tools = {} ) );
 
 //
