@@ -68,9 +68,9 @@ sub print_header {
 	print "*** HEAD ***\n";
 	print "state:OK_WORKER\n";
 	print "port:$listen_port\n";
-	print "cache_key:$cache_key\n";
-	print "client_key:$client_key\n";
-	print "home_dir:$ENV{HOME}\n";
+	print "cacheKey:$cache_key\n";
+	print "clientKey:$client_key\n";
+	print "homeDir:$ENV{HOME}\n";
 	print "****** PONYEDIT 2 PROMPT ******\n";
 }
 
@@ -97,7 +97,6 @@ sub connection_loop {
 		my $packet = read_packet( $socket );
 		my $message = bin_decode( $packet );
 		my $response = bin_encode( $message );
-		
 		send_packet( $socket, $response );
 	}
 }
@@ -198,7 +197,7 @@ sub _bin_decode {
 		$$cursor += $len;
 		return $s;
 	} elsif ( 'i' eq $type ) {
-		my $v = unpack( 'i>', substr( $data, $$cursor, 4 ) );
+		my $v = unpack( 'l>', substr( $data, $$cursor, 4 ) );
 		$$cursor += 4;
 		return $v;
 	} elsif ( 'a' eq $type ) {
@@ -259,7 +258,7 @@ sub _bin_encode {
 			$$enc .= chr( $data );
 		} else {
 			$$enc .= 'i';
-			$$enc .= pack( 'i>', $data );
+			$$enc .= pack( 'l>', $data );
 		}
 	} else {
 		$data = encode( 'utf8', $data );

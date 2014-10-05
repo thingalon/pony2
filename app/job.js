@@ -2,9 +2,11 @@
 //	Job - a potentially long-running request (eg: "get file contents", "read directory")
 //
 
+var Binary = require( './binary.js' );
 var Tools = require( './common/tools.js' );
 var Type = require( './common/type.js' );
 var Host = require( './host.js' );
+
 
 var ipc = require( 'ipc' );
 
@@ -25,6 +27,14 @@ function Job( job, args, sender ) {
 	jobs[ this.id ] = this;
 	
 	this.start();
+}
+
+Job.prototype.encode = function() {
+	return Binary.encode( {
+		id: this.id,
+		job: this.job,
+		args: this.args,
+	} );
 }
 
 Job.getById = function( jobId ) {

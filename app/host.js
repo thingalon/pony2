@@ -3,15 +3,19 @@
 //
 
 var Connection = require( 'ssh2' );
-var Tools = require( './common/tools.js' );
 var crypto = require( 'crypto' );
 var fs = require( 'fs' );
+
+var Tools = require( './common/tools.js' );
+var WorkerTunnel = require( './workertunnel.js' );
 
 function Host( user, hostname ) {
 	this.user = user;
 	this.hostname = hostname;
 
 	this.jobQueue = [];
+	this.priorityTunnels = [];
+	this.fileTunnels = [];
 	this.status = Host.state.idle;
 }
 
@@ -60,6 +64,39 @@ Host.prototype.handleJob = function( job ) {
 	job.host = this;
 	
 	this.connect();
+	this.updateQueue();
+}
+
+//	Called any time the job queue is updated, to find tunnels for each job.
+Host.prototype.updateQueue = function() {
+	if ( this.priorityTunnels.length == 0 || this.fileTunnels.length == 0 )
+		return;
+	
+	while ( this.jobQueue.length > 0 ) {
+		//	TODO: Figure out job priority, smarter tunnel assignment.
+		var job = this.jobQueue.shift();
+		var tunnel = this.findShortestTunnelQueue( this.priorityTunnels );
+		tunnel.takeJob( job );
+	}
+}
+
+//	Given an array of WorkerTunnels, find the one with the shortest queue.
+Host.prototype.findShortestTunnelQueue = function( tunnelList ) {
+	if ( tunnelList.length == 0 )
+		return null;
+	
+	var shortest = tunnelList[0];
+	var shortestLength = tunnelList[0].getQueueLength();
+
+	for ( var i = 1; i < tunnelList.length; i++ ) {
+		var length = tunnelList[ i ].getQueueLength();
+		if ( length < shortestLength ) {
+			shortestLength = length;
+			shortest = tunnelList[ i ];
+		}
+	}
+	
+	return shortest;
 }
 
 Host.prototype.connect = function() {
@@ -145,13 +182,55 @@ Host.prototype.launchWorker = function( inRetry ) {
 		}
 
 		if ( 'OK_WORKER' == message ) {
-			//	We're running!! 
-			console.log( 'OK! READY!!' );
+			//	Worker is running! Parse its header and finalize the connection.
+			host.parseWorkerHeader( result );
 			return;
 		}
 		
 		return host.onConnectionError( 'Invalid response code sent: "' + message + '"' );
 	} );
+}
+
+//	Called when the worker is successfully running. Parses its output header and finalizes the connection.
+Host.prototype.parseWorkerHeader = function( rawHeader ) {
+	var headMarker = rawHeader.indexOf( '*** HEAD ***' );
+	if ( headMarker === -1 )
+		return host.onConnectionError( 'Invalid worker script header!' );
+	
+	//	Parse the header (key:value format. Why isn't it JSON? Because Perl doesn't support it in core)
+	var header = {};
+	rawHeader = rawHeader.substr( headMarker );
+	var lines = rawHeader.split( '\n' );
+	for ( var i = 0; i < lines.length; i++ ) {
+		console.log( lines[ i ] );
+		var pieces = lines[ i ].split( ':', 2 );
+		if ( pieces.length != 2 )
+			continue;
+		
+		header[ pieces[0] ] = pieces[1].trim();
+	}
+	
+	//	Check the header looks valid
+	if ( header.state != 'OK_WORKER' || ! header.port || header.cacheKey.length < 100 || header.clientKey.length < 100 )
+		return host.onConnectionError( 'Invalid worker script header fields!' );
+	
+	this.workerSettings = header;
+
+	// We're live! 
+	this.stdoutHandler = function( data ) {
+		console.log( data.toString() );
+	}
+	console.log( 'Worker ready; opening worker connections' );	
+	
+	//	Open two priority tunnels...
+	for ( var i = 0; i < 2; i++ )
+		this.priorityTunnels.push( new WorkerTunnel( this ) );
+	
+	//	Open five file tunnels...
+	for ( var i = 0; i < 5; i++ )
+		this.fileTunnels.push( new WorkerTunnel( this ) );
+
+	this.updateQueue();
 }
 
 Host.prototype.runShellCommand = function( command, callback ) {
@@ -201,44 +280,3 @@ Host.prototype.onStdErr = function( data ) {
 }
 
 module.exports = Host;
-
-
-
-/*
-	
-	//	Dummy test job; just connects to a server and tries the connection.
-	test_connection: function( job, args ) {
-		var conn = new Connection();
-		var result = '';
-		
-		conn.on('ready', function() {
-  			console.log('Connection :: ready');
-			conn.exec('date', function(err, stream) {
-	   			if (err) throw err;
-    			stream.on('exit', function(code, signal) {
-					console.log('Stream :: exit :: code: ' + code + ', signal: ' + signal);
-					job.done( result );
-				}).on('close', function() {
-					console.log('Stream :: close');
-					conn.end();
-				}).on('data', function(data) {
-					console.log('STDOUT: ' + data);
-					result += data;
-				}).on('error', function(err) {
-					job.fail( 'connection-error', err );
-				}).stderr.on('data', function(data) {
-					console.log('STDERR: ' + data);
-				});
-	  		});
-		});
-
-		conn.connect({
-	  		host: 'put a host here.',
-  			port: 22,
-	  		username: 'put a username here',
-	  		agent: process.env.SSH_AUTH_SOCK,
-		});
-	},
-	
-*/
-

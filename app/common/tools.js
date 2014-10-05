@@ -35,7 +35,7 @@ if ( isNode ) {
 			};
 		}
 	}
-
+	
 } ( isNode ? exports : this.Tools = {} ) );
 
 //
