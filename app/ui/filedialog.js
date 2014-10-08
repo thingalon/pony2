@@ -10,9 +10,19 @@ function FileDialog( args ) {
 	this.e = $( $( 'template#file-dialog-template' ).html() );
 	$( '.overlay-layer' ).append( this.e );
 	this.e.hide().slideDown();
+
+	//	Hook up UI controls.
+	this.e.find( 'button.up' ).click( Tools.cb( this, this.upClicked ) );
+
+	dialog = this;
+	this.e.find( 'input.path' ).keyup( function( e ) {
+		if ( e.keyCode == 13 ) 
+			dialog.showPath( $( this ).val() );
+	} ).focusin();
 	
 	//	Show a path
-	this.showPath( this.args.path );
+	if ( this.args.path )
+		this.showPath( this.args.path );
 }
 
 FileDialog.prototype.showPath = function( path ) {
@@ -74,15 +84,52 @@ FileDialog.prototype.lsSuccess = function( job, result ) {
 		var details = result.entries[ filename ];
 		var isDir = ( details.f.indexOf( 'd' ) !== -1 );
 		
-		var row = $( '<tr>' ).addClass( i % 2 ? 'second' : 'first' );
-		row.append( $( '<td>' ).html( filename ) );
+		var row = $( '<tr>' ).data( 'details', details ).data( 'filename', filename );
+
+		//	Show a filename and an icon
+		var filenameCell = $( '<td>' )
+		filenameCell.append( $( '<i>' ).addClass( 'fa' ).addClass( isDir ? 'fa-folder-o' : 'fa-file-o' ) );
+		filenameCell.append( filename );
+		row.append( filenameCell );
+		
+		//	Show a size (if this is not a directory)
 		row.append( $( '<td>' ).html( isDir ? '' : Tools.prettySize( details.s ) ) );
-		row.append( $( '<td>' ).html( details.m > 0 ? new Date( details.m * 1000 ).toLocaleString() : '' ) );
+		
+		//	Show a last edit time, if available.
+		row.append( $( '<td>' ).html( details.m > 0 ? new Date( details.m ).toLocaleString() : '' ) );
+		
+		var rowDetails = { row: row, filename: filename, details: details, isDir: isDir };
+		row.click( Tools.cb( this, this.rowClicked, rowDetails ) );
+		row.dblclick( Tools.cb( this, this.rowDoubleClicked, rowDetails ) );
 
 		table.append( row );
 	}
 	
 	this.e.find( 'div.files' ).empty().removeClass( 'loading' ).append( table );
+}
+
+FileDialog.prototype.rowClicked = function( args, event ) {
+	//	Selection logic not done yet.
+}
+
+FileDialog.prototype.rowDoubleClicked = function( args ) {
+	var selected = this.path;
+	if ( selected.substr( -1 ) != '/' )
+		selected += '/';
+	selected += args.filename;
+	
+	if ( args.isDir ) {
+		this.showPath( selected );
+	} else {
+		this.e.remove();
+		alert( 'Open ' + selected );
+	}
+}
+
+FileDialog.prototype.upClicked = function() {
+	var upPath = Tools.parentPath( this.path );
+	if ( upPath )
+		this.showPath( upPath );
 }
 
 //	Called when an 'ls' remote call comes back a failure.

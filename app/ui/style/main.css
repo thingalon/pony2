@@ -114,6 +114,11 @@ div.file-dialog div.files tr.head {
 	background-color: #eee;
 }
 
+div.file-dialog div.files tr.selected {
+	background-color: blue;
+	color: white;
+}
+
 div.file-dialog div.files tr td:not(:first-child) {
 	width: 150px;
 }
@@ -127,3 +132,14 @@ div.file-dialog div.files th {
 div.file-dialog div.files td {
 	padding: 2px 5px;
 }
+
+div.file-dialog div.files td i {
+	padding: 2px 5px;
+}
+
+div.file-dialog div.files td i.fa-folder-o {
+	color: #f90;
+}
+
+
+

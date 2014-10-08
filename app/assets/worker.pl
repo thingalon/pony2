@@ -293,7 +293,7 @@ sub expand_path {
 	my ( $path ) = @_;
 	my $home_dir = $ENV{HOME};
 	
-	$path =~ s/^~\//$home_dir\//;
+	$path =~ s/^\/?~(\/|$)/$home_dir\//;
 
 	return $path;
 }

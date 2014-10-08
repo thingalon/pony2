@@ -10,29 +10,71 @@ if ( isNode ) {
 ( function( Tools ) {
 
 	//	Handy helper to ensure callbacks get called with the right 'this'.
-	Tools.cb = function( object, fn ) {
+	Tools.cb = function( object, fn, extra ) {
 		return function() {
-			fn.apply( object, arguments );
+			var args = [];
+			if ( extra != null )
+				args.push( extra );
+			Array.prototype.push.apply( args, arguments );
+
+			fn.apply( object, args );
 		}
 	}
 	
 	//	Split a path into its components
 	Tools.splitPath = function( path ) {
 		//	This is an ssh:// path?
-		var sshRegex = new RegExp( '^ssh://(?:([^@]+)@)?([^/]+)/?(.*)$' );
+		var sshRegex = new RegExp( '^ssh://(?:([^@]+)@)?([^/]+)(/?.*)$' );
 		var result = sshRegex.exec( path );
 		if ( result ) {
+			var remotePath = result[3];
+			if ( ! remotePath.startsWith( '/' ) )
+				remotePath = '/' + remotePath;
+
 			return {
 				type: Type.path.ssh,
 				user: result[1],
 				host: result[2],
-				path: result[3],
+				path: remotePath,
 			};
 		} else {
 			return {
 				type: Type.path.local,
 				path: path,
 			};
+		}
+	}
+	
+	//	Returns the parent of the specified path (if one exists), otherwise false.
+	Tools.parentPath = function( path ) {
+		var pieces = Tools.splitPath( path );
+		var hostPath = pieces.path;
+		
+		//	Split the path, drop the last word
+		var names = hostPath.split( '/' ).filter( function( s ) { return s != ''; } );
+		if ( names.length == 0 )
+			return false;
+		names.pop();
+		pieces.path = names.join( '/' );
+		
+		return Tools.joinPath( pieces );
+	}
+	
+	//	Combines a split path back into a string
+	Tools.joinPath = function ( pathPieces ) {
+		if ( pathPieces.type == Type.path.ssh ) {
+			var path = 'ssh://';
+			if ( pathPieces.user )
+				path += pathPieces.user + '@';
+			path += pathPieces.host;
+			
+			if ( ! pathPieces.path.startsWith( '/' ) )
+				path += '/';
+			path += pathPieces.path;
+			
+			return path;
+		} else {
+			return pathPieces.path;
 		}
 	}
 	
@@ -60,6 +102,12 @@ if ( isNode ) {
 String.prototype.endsWith = function( suffix ) {
     return this.indexOf( suffix, this.length - suffix.length ) !== -1;
 };
+
+String.prototype.startsWith = function( prefix ) {
+	if ( this.length < prefix.length )
+		return false;
+	return this.substr( 0, prefix.length ) == prefix;
+}
 
 String.prototype.contains = function( substring ) {
     return this.indexOf( substring ) !== -1;
