@@ -33,7 +33,7 @@ FileDialog.prototype.showPath = function( path ) {
 	
 	//	Update DOM
 	this.e.find( 'input.path' ).val( path );
-	this.e.find( 'div.files' ).empty().addClass( 'loading' );
+	this.e.find( 'div.files' ).empty().addClass( 'loading' ).html( 'Loading...' );
 	
 	//	Fetch folder content
 	this.lsJob = new JobHandle( {
