@@ -84,11 +84,18 @@ FileDialog.prototype.lsSuccess = function( job, result ) {
 		var details = result.entries[ filename ];
 		var isDir = ( details.f.indexOf( 'd' ) !== -1 );
 		
-		var row = $( '<tr>' ).data( 'details', details ).data( 'filename', filename );
+		var row = $( '<tr>' )
+			.addClass( i % 2 == 0 ? 'first' : 'second' )
+			.data( 'details', details )
+			.data( 'filename', filename );
 
 		//	Show a filename and an icon
 		var filenameCell = $( '<td>' )
-		filenameCell.append( $( '<i>' ).addClass( 'fa' ).addClass( isDir ? 'fa-folder-o' : 'fa-file-o' ) );
+		if ( isDir )
+			filenameCell.append( Tools.iconStack( 'fa-folder', '#f90' ) );
+		else
+			filenameCell.append( Tools.iconStack( 'fa-file', '#fff' ) );
+			
 		filenameCell.append( filename );
 		row.append( filenameCell );
 		

@@ -116,6 +116,10 @@ div.file-dialog {
 					border: 1px solid #ddd;
 				}
 			}
+			
+			tr.second {
+				background-color: #def;
+			}
 
 			tr td:not(:first-child) {
 				width: 150px;
@@ -124,12 +128,9 @@ div.file-dialog {
 			td {
 				padding: 2px 5px;
 				
-				i {
-					padding: 2px 5px;
-
-					&.fa-folder-o {
-						color: #f90;
-					}
+				.fa-stack {
+					height: 1ex;
+					line-height: 1ex;
 				}
 			}
 		}

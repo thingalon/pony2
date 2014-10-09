@@ -93,6 +93,14 @@ if ( isNode ) {
 			return ( size / 1000000000000 ).toFixed( 1 ) + ' TB';
 	}
 	
+	//	UI: Create an outlined icon using FontAwesome's -o notation and stacking
+	Tools.iconStack = function( icon, color ) {
+		var span = $( '<span>' ).addClass( 'fa-stack' );
+		span.append( $( '<i>' ).addClass( 'fa fa-stack-1x ' + icon ).css( 'color', color ) );
+		span.append( $( '<i>' ).addClass( 'fa fa-stack-1x ' + icon + '-o' ) );
+		return span;
+	}
+	
 } ( isNode ? exports : this.Tools = {} ) );
 
 //
