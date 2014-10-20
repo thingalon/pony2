@@ -8,9 +8,12 @@ use IO::Socket::INET;
 use Data::Dumper;
 use Fcntl qw(:mode);
 use Encode qw(decode encode);
+use Encode::Guess;
+use Digest::MD5 qw(md5_hex);
 
 our %job_types = (
-	'ls' => \&job_ls,
+	'ls'   => \&job_ls,
+	'open' => \&job_open,
 );
 
 $| = 1;	# Autoflush.
@@ -108,6 +111,7 @@ sub connection_loop {
 		} else {
 			$result = {
 				'error' => 'Unrecognized job type: ' . $message->{'job'},
+				'code' => 'internal',
 			};
 		}
 		
@@ -325,7 +329,79 @@ sub job_ls {
 	}
 	close DIR;
 
-	return { 'error' => 'Permission denied' } if ( scalar( keys %$entries ) == 0 && ! ( -r $path ) );
+	return { 'error' => 'Permission denied', 'code' => 'permission' } if ( scalar( keys %$entries ) == 0 && ! ( -r $path ) );
 	return { 'entries' => $entries };
+}
+
+sub job_open {
+	my ( $args ) = @_;
+	my $path = expand_path( $args->{'path'} );
+	
+	print $path . "\n";	
+	
+	my $buffer = Buffer->new();
+	my $error = $buffer->open_file( $path );
+	return $error if ( ref( $error ) );
+	
+	return { 'content' => $buffer->{'content'}, 'dos' => $buffer->{'dos'}, 'checksum' => $buffer->{'checksum'} };
+}
+
+#
+#	Buffer class
+#
+
+{ package Buffer;
+	use Encode qw(encode decode);
+	use Digest::MD5 qw(md5_hex);
+
+	sub new {
+		my $fid = shift;
+		my $self = { 'fid' => $fid };
+		bless $self;
+		return $self;
+	}
+	
+	sub fid {
+		my ( $self ) = @_;
+		return $self->{'id'};
+	}
+
+	sub open_file {
+		my ( $self, $filename ) = @_;
+		$self->{'filename'} = $filename;
+		
+		# Open the file
+		if ( ! open( F, '<', $filename ) ) {
+			return { 'error' => 'File not found', 'code' => 'not_found' } if ( ! -e $filename );
+			return { 'error' => 'Permission denied', 'code' => 'permission' };
+		}
+
+		# Read it as bytes
+		my $raw_content;		
+		do {
+			local $/;
+			$raw_content = <F>;
+		};
+		close F;
+		
+		# Make sure it's utf-8, or throw an error.
+		$self->{'content'} = eval {
+			decode( 'utf8', $raw_content, Encode::FB_CROAK );
+		} or return { 'error' => 'File is not UTF-8', 'code' => 'invalid_format' };
+		
+		# Detect DOS line endings, strip them.
+		$self->{'dos'} = ( $self->{'content'} =~ /\r\n/ );
+		$self->{'content'} =~ s/\r\n/\n/g if ( $self->{'dos'} );
+		
+		$self->checksum();
+		return undef;
+	}
+	
+	sub checksum {
+		my ( $self ) = @_;
+		
+		my $encoded = encode( 'utf8', $self->{'content'} );
+		$self->{'checksum'} = md5_hex( $encoded );
+	}
 }
 

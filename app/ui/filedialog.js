@@ -9,7 +9,7 @@ function FileDialog( args ) {
 	//	Create DOM elements from a template
 	this.e = $( $( 'template#file-dialog-template' ).html() );
 	$( '.overlay-layer' ).append( this.e );
-	this.e.hide().slideDown();
+	this.e.hide().slideDown( 'fast' );
 
 	//	Hook up UI controls.
 	this.e.find( 'button.up' ).click( Tools.cb( this, this.upClicked ) );
@@ -129,7 +129,8 @@ FileDialog.prototype.rowDoubleClicked = function( args ) {
 		this.showPath( selected );
 	} else {
 		this.e.remove();
-		alert( 'Open ' + selected );
+		if ( this.args.onDone )
+			this.args.onDone( [ selected ] );
 	}
 }
 

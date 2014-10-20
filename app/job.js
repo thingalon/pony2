@@ -93,6 +93,17 @@ Job.prototype.sendToHost = function( user, hostname ) {
 	host.handleJob( this );
 }
 
+//	Checks for a 'path' parameter in the job, if present and looks remote, it sends the job on to the remote host.
+Job.prototype.maybeSendToHost = function() {
+	var splitPath = Tools.splitPath( this.args.path );
+	if ( splitPath.type == Type.path.local )
+		return false;
+	
+	this.args.path = splitPath.path;
+	this.sendToHost( splitPath.user, splitPath.host );
+	return true;
+}
+
 //	Export Job class.
 module.exports = Job;
 
@@ -109,7 +120,12 @@ var jobTypes = {
 		
 		args.path = splitPath.path;
 		job.sendToHost( splitPath.user, splitPath.host );
-	},	
+	},
+	
+	open: function( job, args ) {
+		if ( ! job.maybeSendToHost() )
+			return job.fail( 'not-implemented', 'Local ' + job.job + ' not yet implemented.' );
+	}
 
 };
 

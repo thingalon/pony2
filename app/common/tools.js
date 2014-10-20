@@ -9,6 +9,13 @@ if ( isNode ) {
 
 ( function( Tools ) {
 
+	//	Load the contents of a <template> block into the target DOM element
+	Tools.loadTemplate = function( target, template ) {
+		var t = $( $( 'template#' + template + '-template' ).html() );
+		target.append( t );
+		return t;
+	}
+
 	//	Handy helper to ensure callbacks get called with the right 'this'.
 	Tools.cb = function( object, fn, extra ) {
 		return function() {
@@ -43,6 +50,12 @@ if ( isNode ) {
 				path: path,
 			};
 		}
+	}
+	
+	//	Returns true of the specified path is remote.
+	Tools.isPathRemote = function( path ) {
+		var pieces = Tools.splitPath( path );
+		return pieces.type == Type.path.ssh;
 	}
 	
 	//	Returns the parent of the specified path (if one exists), otherwise false.

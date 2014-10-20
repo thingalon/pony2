@@ -13,9 +13,11 @@ function Host( user, hostname ) {
 	this.user = user;
 	this.hostname = hostname;
 
+	this.allJobTunnels = [];	//	all 7 tunnels; non-bound jobs can go to the least busy of all
+	this.boundJobTunnels = [];	//	5 file-bound tunnels; can take regular jobs, or file-specific ones.
+	this.tunnelBindings = {};	//	Maps remote file ids to workertunnels they are bound to
+
 	this.jobQueue = [];
-	this.priorityTunnels = [];
-	this.fileTunnels = [];
 	this.status = Host.state.idle;
 }
 
@@ -40,7 +42,7 @@ Host.initCommand = "stty -echo\nunset HISTFILE\nperl -e '" +
 	'x"NO_"."WORKER"if(!-e$f);' +	//	Check worker exists
 	'x"OLD_"."WORKER"if(digest_file_hex($f,"MD5")ne"' + Host.workerScriptHash + '");' +	//	Check worker md5 hash
 	'exec "perl $f"' +	//	Run worker
-"'||echo 'NO_''PERL';echo '****** PONYEDI''T 2 PROMPT ******'\n";	//	Output error if no perl found
+"'||perl -e 'print \"BORK_''PERL\";'||echo 'NO_''PERL';echo '****** PONYEDI''T 2 PROMPT ******'\n";	//	Output error if no perl found
 
 Host.find = function( user, hostname, createIfMissing ) {
 	for ( var i = 0; i < Host.knownHosts.length; i++ ) {
@@ -69,14 +71,25 @@ Host.prototype.handleJob = function( job ) {
 
 //	Called any time the job queue is updated, to find tunnels for each job.
 Host.prototype.updateQueue = function() {
-	if ( this.priorityTunnels.length == 0 || this.fileTunnels.length == 0 )
+	if ( this.allJobTunnels.length == 0 || this.boundJobTunnels.length == 0 )
 		return;
 	
 	while ( this.jobQueue.length > 0 ) {
-		//	TODO: Figure out job priority, smarter tunnel assignment.
 		var job = this.jobQueue.shift();
-		var tunnel = this.findShortestTunnelQueue( this.priorityTunnels );
+		
+		//	Is this job bound to an rfid? Does that rfid already have a tunnel?
+		var bindableJob = job.args.rfid;
+		if ( bindableJob && this.tunnelBindings[ job.args.rfid ] )
+			this.tunnelBindings[ job.args.rfid ].takeJob( job );
+		
+		//	Find the tunnel with the shortest queue among the ones this job is allowed to take
+		var tunnelList = bindableJob ? this.boundJobTunnels : this.allJobTunnels;
+		var tunnel = this.findShortestTunnelQueue( tunnelList );
 		tunnel.takeJob( job );
+		
+		//	If this is a bindable job that is not yet bound to a tunnel, bind it now.
+		if ( bindableJob )
+			this.tunnelBindings[ job.args.rfid ] = tunnel;
 	}
 }
 
@@ -140,12 +153,12 @@ Host.prototype.onConnectionReady = function() {
 Host.prototype.launchWorker = function( inRetry ) {
 	var host = this;
 	
-	console.log( 'Checking and launching remote worker' );		
+	console.log( 'Checking and launching remote worker' );
 	this.runShellCommand( Host.initCommand, function( result ) {
 		if ( ! result )
 			return host.onConnectionError( 'Timeout while setting up remote prompt!' );
 
-		var resultRegExp = new RegExp( '((?:OK|NO|OLD)_(?:WORKER|PERL))([0-9.]*)' );
+		var resultRegExp = new RegExp( '((?:OK|NO|OLD|BORK)_(?:WORKER|PERL))([0-9.]*)' );
 		var resultMessage = resultRegExp.exec( result );
 		if ( ! resultMessage )
 			return host.onConnectionError( 'Unable to interpret response from server!' );
@@ -154,6 +167,10 @@ Host.prototype.launchWorker = function( inRetry ) {
 		
 		if ( 'NO_PERL' == message )
 			return host.onConnectionError( 'No Perl found on the remote server!' );
+		
+		if ( 'BORK_PERL' == message ) {
+			return host.onConnectionError( 'Perl returned some errors:\n' + result.substring( 0, result.indexOf( 'BORK_PERL' ) ) );
+		}
 		
 		if ( 'OLD_PERL' == message ) {
 			var version = resultMessage[2];
@@ -221,14 +238,13 @@ Host.prototype.parseWorkerHeader = function( rawHeader ) {
 	}
 	console.log( 'Worker ready; opening worker connections' );	
 	
-	//	Open two priority tunnels...
-	for ( var i = 0; i < 2; i++ )
-		this.priorityTunnels.push( new WorkerTunnel( this ) );
+	//	Open 6 tunnels; 1 of which is reserved for unbound jobs, the rest can take both bound and unbound jobs.
+	for ( var i = 0; i < 6; i++ ) {
+		var tunnel = new WorkerTunnel( this );
+		this.allJobTunnels.push( tunnel );
+		if ( i > 0 ) this.boundJobTunnels.push( tunnel );
+	}
 	
-	//	Open five file tunnels...
-	for ( var i = 0; i < 5; i++ )
-		this.fileTunnels.push( new WorkerTunnel( this ) );
-
 	this.updateQueue();
 }
 

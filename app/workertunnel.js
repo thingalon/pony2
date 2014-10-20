@@ -75,9 +75,12 @@ WorkerTunnel.prototype.onData = function( data ) {
 		var message = Binary.decode( this.readBuffer, 5 );
 		this.readBuffer = null;
 		
-		if ( message )
-			this.currentJob.done( message );
-		else
+		if ( message ) {
+			if ( message.error && message.code )
+				this.currentJob.fail( message.code, message.error );
+			else
+				this.currentJob.done( message );
+		} else
 			this.currentJob.fail( 'error', 'Null response' );
 		
 		this.currentJob = null;

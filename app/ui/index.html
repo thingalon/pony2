@@ -9,18 +9,33 @@
 		<!-- Pony things -->
 		<link rel="stylesheet" type="text/css" href="style/main.css">
 		<script src="filedialog.js"></script>
+		<script src="filemanager.js"></script>
 		<script src="jobhandle.js"></script>
+		<script src="remotefile.js"></script>
+		<script src="codeeditorview.js"></script>
 		<script src="../common/type.js"></script>
 		<script src="../common/tools.js"></script>
 	</head>
 	<body>
+		<!--
+			Overlay container
+		-->
 		<div class="overlay-layer">
 		</div>
 	
-		<h1>Hello World!</h1>
-		We are using node.js <script>document.write(process.version)</script>
-		and atom-shell <script>document.write(process.versions['atom-shell'])</script>.
-		
+		<!--
+			Main layout
+		-->
+		<div class="main-layout">
+			<div class="left-bar">
+			</div>
+			<div class="view-stack">
+			</div>
+		</div>
+
+		<!--
+			Template: File Open / Save dialog
+		-->		
 		<template id="file-dialog-template">
 			<div class="overlay">
 				<div class="dialog file-dialog">
@@ -45,11 +60,30 @@
 				</div>
 			</div>
 		</template>
+		
+		<!--
+			Template: Progress bar for loading views
+		-->
+		<template id="view-loader-template">
+			<div class="view-loader">
+				<i class="fa fa-cog fa-spin"></i>
+				<div class="progress-bar">
+					<div class="fill"></div>
+				</div>
+			</div>
+		</template>
 	</body>
 	
 	<script>
 		window.$ = window.jQuery = require('./vendor/jquery/jquery-2.1.1.min.js');
+		
 		new FileDialog( {
+			onDone: function( filenames ) {
+				if ( filenames.length > 0 ) {
+					var file = FileManager.open( filenames[0] );
+					new CodeEditorView( file, $( '.view-stack' ) );								
+				}
+			}
 		} );
 	</script>
 </html>
