@@ -13,6 +13,7 @@
 		<script src="jobhandle.js"></script>
 		<script src="remotefile.js"></script>
 		<script src="codeeditorview.js"></script>
+		<script src="menu.js"></script>
 		<script src="../common/type.js"></script>
 		<script src="../common/tools.js"></script>
 	</head>
@@ -76,14 +77,48 @@
 	
 	<script>
 		window.$ = window.jQuery = require('./vendor/jquery/jquery-2.1.1.min.js');
-		
-		new FileDialog( {
-			onDone: function( filenames ) {
-				if ( filenames.length > 0 ) {
-					var file = FileManager.open( filenames[0] );
-					new CodeEditorView( file, $( '.view-stack' ) );								
-				}
+
+	
+	
+		//	Set up an application menu
+		var remote = require('remote');
+		var Menu = remote.require('menu');
+		var MenuItem = remote.require('menu-item');
+		var mainMenuTemplate = [ 
+			{
+				label: 'PonyEdit 2',
+				submenu: [
+					{
+						label: 'Quit',
+						accelerator: 'Command+Q',
+						click: function() {
+							remote.require( 'app' ).quit();
+						}
+					},
+				],
+			}, {
+				label: 'File',
+				submenu: [
+					{
+						label: 'Open File',
+						accelerator: 'Command+O',
+						click: function() {
+							new FileDialog( {
+								onDone: function( filenames ) {
+									if ( filenames.length > 0 ) {
+										var file = FileManager.open( filenames[0] );
+										new CodeEditorView( file, $( '.view-stack' ) );								
+									}
+								}
+							} );							
+						}
+					},
+					{ label: 'Do other stuff' },
+				],
 			}
-		} );
+		];
+		var mainMenu = Menu.buildFromTemplate( mainMenuTemplate );
+		Menu.setApplicationMenu( mainMenu );
+		//-------
 	</script>
 </html>
