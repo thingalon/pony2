@@ -5,6 +5,7 @@
 var Connection = require( 'ssh2' );
 var crypto = require( 'crypto' );
 var fs = require( 'fs' );
+var ipc = require( 'ipc' );
 
 var Tools = require( './common/tools.js' );
 var WorkerTunnel = require( './workertunnel.js' );
@@ -110,6 +111,12 @@ Host.prototype.findShortestTunnelQueue = function( tunnelList ) {
 	}
 	
 	return shortest;
+}
+
+Host.prototype.setState = function( state, message ) {
+	this.status = state;
+	this.message = message;
+	
 }
 
 Host.prototype.connect = function() {

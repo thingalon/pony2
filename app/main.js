@@ -1,6 +1,8 @@
 var app = require( 'app' );
 var BrowserWindow = require( 'browser-window' );
 var Job = require( './job.js' );
+var ipc = require( 'ipc' );
+var settings = require( './settings.js' );
 
 require('crash-reporter').start();
 
@@ -8,6 +10,11 @@ require('crash-reporter').start();
 app.on( 'window-all-closed', function() {
 	if ( process.platform != 'darwin' )
 		app.quit();
+} );
+
+//	Open the developer console when requested
+ipc.on( 'show-console', function() {
+	mainWindow.openDevTools();
 } );
 
 //	Create the main window, load the main UI

@@ -11,14 +11,16 @@ function FileDialog( args ) {
 	$( '.overlay-layer' ).append( this.e );
 	this.e.hide().slideDown( 'fast' );
 
+	this.loadFavorites();
+
 	//	Hook up UI controls.
 	this.e.find( 'button.up' ).click( Tools.cb( this, this.upClicked ) );
+	this.e.find( 'li.add-favorite' ).click( Tools.cb( this, this.addFavorite ) );
 
 	dialog = this;
-	this.e.find( 'input.path' ).keyup( function( e ) {
-		if ( e.keyCode == 13 ) 
+	this.e.find( 'input.path' ).onEnter( function() { 
 			dialog.showPath( $( this ).val() );
-	} ).focusin();
+	} ).focus();
 	
 	//	Show a path
 	if ( this.args.path )
@@ -143,4 +145,69 @@ FileDialog.prototype.upClicked = function() {
 //	Called when an 'ls' remote call comes back a failure.
 FileDialog.prototype.lsFailure = function( job, code, message ) {
 	alert( 'Failed to open file: ' + message );
+}
+
+//	Called when "Add favorite" is clicked. Show an edit field to name it.
+FileDialog.prototype.addFavorite = function() {
+	if ( ! this.path ) {
+		alert( 'Please enter a path before trying to save a favorite location' );
+		return;
+	}
+	
+	var path = this.path;
+	var dialog = this;
+
+	var li = $( '<li>' );
+	var input = $( '<input>' )
+		.appendTo( li )
+		.val( Tools.describePath( path ) );
+	
+	var apply = function() {
+		var name = input.val();
+		if ( name != '' ) {
+			dialog.populateFavorite( li, name, path );
+			dialog.saveFavorites();
+		}
+	}
+	
+	input.focusout( apply ).onEnter( apply );
+
+	li.insertBefore( this.e.find( 'li.add-favorite' ) );
+	input.focus().select();
+}
+
+//	Populate a DOM node for a favorite.
+FileDialog.prototype.populateFavorite = function( li, name, path ) {
+	var newFavorite = $( '<span><i class="fa fa-star-o">&nbsp;</span>' ).html( name );
+	
+	li.empty().append( newFavorite );
+	li.addClass( 'favorite' ).data( 'fav-name', name ).data( 'fav-path', path );
+	li.click( function() { dialog.showPath( path ); } );
+}
+
+//	Load the list of favorites, populate the favorites list
+FileDialog.prototype.loadFavorites = function() {
+	var favorites = Settings.get( 'favorites', [] );
+	var addFavoriteButton = this.e.find( 'li.add-favorite' );
+
+	for ( var i = 0; i < favorites.length; i++ ) {
+		this.populateFavorite( $( '<li>' ).insertBefore( addFavoriteButton ), favorites[ i ].name, favorites[ i ].path );
+	}
+}
+
+//	Save the current list of favorites back to the settings
+FileDialog.prototype.saveFavorites = function() {
+	var favorites = [];
+
+	this.e.find( 'li.favorite' ).map( function() {
+		var name = $( this ).data( 'fav-name' );
+		var path = $( this ).data( 'fav-path' );
+		
+		favorites.push( {
+			name: name,
+			path: path,
+		} );
+	} );
+	
+	Settings.set( 'favorites', favorites );
 }

@@ -112,6 +112,17 @@ div.file-dialog {
   div.file-dialog div.folders {
     width: 15em;
     border-right: 1px solid #aaa; }
+    div.file-dialog div.folders ul {
+      list-style-type: none;
+      padding-left: 15px; }
+      div.file-dialog div.folders ul span.head {
+        display: block;
+        font-size: 80%;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #666;
+        margin-bottom: 5px;
+        margin-top: 10px; }
   div.file-dialog div.files {
     flex-grow: 100;
     background-color: white;

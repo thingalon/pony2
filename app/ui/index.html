@@ -11,9 +11,11 @@
 		<script src="filedialog.js"></script>
 		<script src="filemanager.js"></script>
 		<script src="jobhandle.js"></script>
+		<script src="jquery.js"></script>
 		<script src="remotefile.js"></script>
 		<script src="codeeditorview.js"></script>
 		<script src="menu.js"></script>
+		<script src="settings.js"></script>
 		<script src="../common/type.js"></script>
 		<script src="../common/tools.js"></script>
 	</head>
@@ -50,7 +52,13 @@
 							<button class="refresh fa fa-refresh" title="Refresh"></button>
 						</div>
 						<div class="columns">
-							<div class="folders"></div>
+							<div class="folders">
+								<ul>
+									<li><span class="head">Favorite Locations</span> <ul class="favorites">
+										<li class="add-favorite"><i class="fa fa-plus-circle"></i> Add Favorite</li>
+									</ul></li>
+								</ul>
+							</div>
 							<div class="files"></div>
 						</div>
 						<div class="button-bar">
@@ -76,14 +84,11 @@
 	</body>
 	
 	<script>
-		window.$ = window.jQuery = require('./vendor/jquery/jquery-2.1.1.min.js');
-
-	
-	
-		//	Set up an application menu
 		var remote = require('remote');
 		var Menu = remote.require('menu');
 		var MenuItem = remote.require('menu-item');
+		var ipc = require( 'ipc' );
+
 		var mainMenuTemplate = [ 
 			{
 				label: 'PonyEdit 2',
@@ -93,6 +98,13 @@
 						accelerator: 'Command+Q',
 						click: function() {
 							remote.require( 'app' ).quit();
+						}
+					},
+					{
+						label: 'Show Developer Console',
+						accelerator: 'Alt+Command+I',
+						click: function() {
+							require( 'ipc' ).send( 'show-console' );
 						}
 					},
 				],
@@ -119,6 +131,5 @@
 		];
 		var mainMenu = Menu.buildFromTemplate( mainMenuTemplate );
 		Menu.setApplicationMenu( mainMenu );
-		//-------
 	</script>
 </html>

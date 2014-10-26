@@ -73,8 +73,23 @@ if ( isNode ) {
 		return Tools.joinPath( pieces );
 	}
 	
+	//	Come up with a short, pretty description of a path
+	Tools.describePath = function( path ) {
+		var pieces = Tools.splitPath( path );
+		var folders = pieces.path.split( '/' );
+		
+		do {
+			var name = folders.pop();
+		} while ( name.length == 0 && folders.length > 0 );
+		
+		if ( pieces.type == Type.path.ssh )
+			return name + ' on ' + pieces.host;
+		else
+			return name + ' (local)';
+	}
+	
 	//	Combines a split path back into a string
-	Tools.joinPath = function ( pathPieces ) {
+	Tools.joinPath = function( pathPieces ) {
 		if ( pathPieces.type == Type.path.ssh ) {
 			var path = 'ssh://';
 			if ( pathPieces.user )
@@ -133,3 +148,4 @@ String.prototype.startsWith = function( prefix ) {
 String.prototype.contains = function( substring ) {
     return this.indexOf( substring ) !== -1;
 };
+

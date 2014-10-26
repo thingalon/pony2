@@ -147,6 +147,21 @@ div.file-dialog {
 	div.folders {
 		width: 15em;
 		border-right: 1px solid #aaa;
+		
+		ul {
+			list-style-type: none;
+			padding-left: 15px;
+			
+			span.head {
+				display: block;
+				font-size: 80%;
+				font-weight: bold;
+				text-transform: uppercase;
+				color: #666;
+				margin-bottom: 5px;
+				margin-top: 10px;
+			}
+		}
 	}
 					
 	div.files {
