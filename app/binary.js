@@ -95,7 +95,7 @@ function _dec_uintx( wb ) {
 	var length = _dec_uint8( wb );
 
 	if ( length == 255 ) {
-		length = wb.buffer.readUint32BE( wb.cursor );
+		length = wb.buffer.readUInt32BE( wb.cursor );
 		wb.cursor += 4;
 	}
 	
