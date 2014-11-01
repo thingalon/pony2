@@ -28,7 +28,16 @@ div.main-layout {
 	div.view-stack {
 		flex-grow: 1;
 		height: 100%;
+		position: relative;
 	}
+}
+
+div.editor {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
 }
 
 /* Views */

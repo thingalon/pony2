@@ -6,6 +6,8 @@ function RemoteFile( path ) {
 	this.path = path;
 	this.state = RemoteFile.State.closed;
 	this.rfid = RemoteFile.nextRfid++;
+	
+	this.type = FileType.guessFromPath( path );
 }
 
 RemoteFile.nextRfid = 1;	//	Remote File ID. Used to bind jobs for this file to one worker tunnel.
