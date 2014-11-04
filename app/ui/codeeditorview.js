@@ -54,4 +54,6 @@ CodeEditorView.prototype.showEditor = function() {
 		var mode = 'ace/mode/' + this.file.type.syntax;
 		this.editor.getSession().setMode( mode );
 	}
+	
+	this.editor.getSession().on( 'change', Tools.cb( this.file, this.file.contentChanged ) );
 }

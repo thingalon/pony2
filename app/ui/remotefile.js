@@ -61,3 +61,27 @@ RemoteFile.prototype.openFailure = function( job, code, message ) {
 	this.setState( RemoteFile.State.error );
 }
 
+RemoteFile.prototype.updateFailure = function( job, code, message ) {
+	console.log( "Failed to push an update to the server: " + code + " - " + message );
+}
+
+RemoteFile.prototype.contentChanged = function( details ) {
+	new JobHandle( {
+		job: 'update',
+		args: {
+			rfid: this.rfid,
+			details: details,
+		},
+		onFailure: Tools.cb( this, this.updateFailure ),
+	} );
+}
+
+RemoteFile.prototype.save = function() {
+	new JobHandle( {
+		job: 'save',
+		args: {
+			rfid: this.rfid,
+		},
+	} );
+}
+

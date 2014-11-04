@@ -10,6 +10,7 @@ function WorkerTunnel( host ) {
 	this.queue = [];
 	this.busy = true;
 	this.readBuffer = null;
+	this.tunnelId = WorkerTunnel.nextTunnelId++;
 	var tunnel = this;
 	
 	host.connection.forwardOut( '127.0.0.1', host.workerSettings.port, '127.0.0.1', host.workerSettings.port, function( error, stream ) {
@@ -32,6 +33,8 @@ function WorkerTunnel( host ) {
 	} );
 }
 
+WorkerTunnel.nextTunnelId = 0;
+
 //	Called whenever the queue changes state, to check if we can send anything down the wire.
 WorkerTunnel.prototype.updateQueue = function() {
 	if ( this.busy )
@@ -44,6 +47,7 @@ WorkerTunnel.prototype.updateQueue = function() {
 	var job = this.queue.shift();
 	this.currentJob = job;
 	var blob = job.encode();	
+	this.busy = true;	
 	
 	//	Prepare a packet header
 	var header = new Buffer( 5 );
@@ -76,7 +80,7 @@ WorkerTunnel.prototype.onData = function( data ) {
 		this.readBuffer = null;
 		
 		if ( message ) {
-			if ( message.error && message.code )
+			if ( message.hasOwnProperty( 'error' ) && message.hasOwnProperty( 'code' ) )
 				this.currentJob.fail( message.code, message.error );
 			else
 				this.currentJob.done( message );
@@ -94,7 +98,12 @@ WorkerTunnel.prototype.getQueueLength = function() {
 }
 
 WorkerTunnel.prototype.takeJob = function( job ) {
-	console.log( 'Tunnel taking job' );
+	if ( job.alreadyAssignedTunnel ) {
+		console.log( "Trying to reassign a job that's already been assigned a tunnel." );
+		process.exit(1);
+	}
+	job.alreadyAssignedTunnel = true;
+
 	this.queue.push( job );
 	this.updateQueue();
 }

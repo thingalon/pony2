@@ -95,13 +95,27 @@ Job.prototype.sendToHost = function( user, hostname ) {
 
 //	Checks for a 'path' parameter in the job, if present and looks remote, it sends the job on to the remote host.
 Job.prototype.maybeSendToHost = function() {
-	var splitPath = Tools.splitPath( this.args.path );
-	if ( splitPath.type == Type.path.local )
-		return false;
+	//	Find the right host by rfid.
+	if ( this.args.rfid ) {
+		var host = Host.findByRfid( this.args.rfid );
+		if ( host ) {
+			this.host = host;
+			host.handleJob( this );
+			return true;
+		}
+	}
+
+	//	Find the right host by path
+	if ( this.args.path ) {
+		var splitPath = Tools.splitPath( this.args.path );
+		if ( splitPath.type != Type.path.local ) {
+			this.args.path = splitPath.path;
+			this.sendToHost( splitPath.user, splitPath.host );
+			return true;
+		}		
+	}
 	
-	this.args.path = splitPath.path;
-	this.sendToHost( splitPath.user, splitPath.host );
-	return true;
+	return false;
 }
 
 //	Export Job class.
@@ -125,7 +139,17 @@ var jobTypes = {
 	open: function( job, args ) {
 		if ( ! job.maybeSendToHost() )
 			return job.fail( 'not-implemented', 'Local ' + job.job + ' not yet implemented.' );
-	}
+	},
+	
+	update: function( job, args ) {
+		if ( ! job.maybeSendToHost() )
+			return job.fail( 'not-implemented', 'Local ' + job.job + ' not implemented.' );
+	},
+	
+	save: function( job, args ) {
+		if ( ! job.maybeSendToHost() )
+			return job.fail( 'not-implemented', 'Local ' + job.job + ' not yet implemeneted.' );
+	},
 
 };
 

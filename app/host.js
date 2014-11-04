@@ -23,6 +23,7 @@ function Host( user, hostname ) {
 }
 
 Host.knownHosts = [];
+Host.byRfid = {};
 Host.state = {
 	idle: 0,
 	connecting: 1,
@@ -62,6 +63,14 @@ Host.find = function( user, hostname, createIfMissing ) {
 	}
 }
 
+//	Find the host responsible for handling the specified remote file id (rfid)
+Host.findByRfid = function( rfid ) {
+	if ( Host.byRfid[ rfid ] )
+		return Host.byRfid[ rfid ];
+	
+	return null;
+}
+
 Host.prototype.handleJob = function( job ) {
 	this.jobQueue.push( job );
 	job.host = this;
@@ -81,7 +90,7 @@ Host.prototype.updateQueue = function() {
 		//	Is this job bound to an rfid? Does that rfid already have a tunnel?
 		var bindableJob = job.args.rfid;
 		if ( bindableJob && this.tunnelBindings[ job.args.rfid ] )
-			this.tunnelBindings[ job.args.rfid ].takeJob( job );
+			return this.tunnelBindings[ job.args.rfid ].takeJob( job );
 		
 		//	Find the tunnel with the shortest queue among the ones this job is allowed to take
 		var tunnelList = bindableJob ? this.boundJobTunnels : this.allJobTunnels;
@@ -89,8 +98,10 @@ Host.prototype.updateQueue = function() {
 		tunnel.takeJob( job );
 		
 		//	If this is a bindable job that is not yet bound to a tunnel, bind it now.
-		if ( bindableJob )
+		if ( bindableJob ) {
 			this.tunnelBindings[ job.args.rfid ] = tunnel;
+			Host.byRfid[ job.args.rfid ] = this;
+		}
 	}
 }
 
@@ -241,7 +252,7 @@ Host.prototype.parseWorkerHeader = function( rawHeader ) {
 
 	// We're live! 
 	this.stdoutHandler = function( data ) {
-		console.log( data.toString() );
+		process.stdout.write( data.toString() );
 	}
 	console.log( 'Worker ready; opening worker connections' );	
 	
