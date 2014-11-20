@@ -11,6 +11,7 @@ function WorkerTunnel( host ) {
 	this.busy = true;
 	this.readBuffer = null;
 	this.tunnelId = WorkerTunnel.nextTunnelId++;
+	this.nextMessageId = 0;
 	var tunnel = this;
 	
 	host.connection.forwardOut( '127.0.0.1', host.workerSettings.port, '127.0.0.1', host.workerSettings.port, function( error, stream ) {

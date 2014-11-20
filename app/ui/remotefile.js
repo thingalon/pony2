@@ -76,11 +76,15 @@ RemoteFile.prototype.contentChanged = function( details ) {
 	} );
 }
 
-RemoteFile.prototype.save = function() {
+RemoteFile.prototype.save = function( checksum ) {
 	new JobHandle( {
 		job: 'save',
 		args: {
 			rfid: this.rfid,
+			c: checksum,
+		},
+		onSuccess: function() {
+			console.log( 'Saved!' );
 		},
 	} );
 }

@@ -57,3 +57,10 @@ CodeEditorView.prototype.showEditor = function() {
 	
 	this.editor.getSession().on( 'change', Tools.cb( this.file, this.file.contentChanged ) );
 }
+
+CodeEditorView.prototype.getChecksum = function() {
+	var value = this.editor.getSession().getValue();
+	var md5 = require('MD5');
+	
+	return md5( value );
+}

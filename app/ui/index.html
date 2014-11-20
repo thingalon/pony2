@@ -122,7 +122,7 @@
 								onDone: function( filenames ) {
 									if ( filenames.length > 0 ) {
 										window.file = FileManager.open( filenames[0] );
-										new CodeEditorView( window.file, $( '.view-stack' ) );								
+										window.editor = new CodeEditorView( window.file, $( '.view-stack' ) );								
 									}
 								}
 							} );							
@@ -137,7 +137,7 @@
 								return;
 							}
 							
-							window.file.save();
+							window.file.save( window.editor.getChecksum() );
 						},
 					},
 					{ label: 'Do other stuff' },

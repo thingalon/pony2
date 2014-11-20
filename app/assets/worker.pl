@@ -361,8 +361,9 @@ sub job_save {
 	my ( $args ) = @_;
 	my $buffer = Buffer->get( $args->{'rfid'} );
 	return { 'error' => 'Buffer not found', 'code' => 'critical' } if ( ! $buffer );
-	
-	return $buffer->save();
+
+	my $checksum = $args->{'c'};	
+	return $buffer->save( $checksum );
 }
 
 #
@@ -480,11 +481,16 @@ sub job_save {
 	}
 	
 	sub save {
-		my ( $self ) = @_;
+		my ( $self, $expected_checksum ) = @_;
+
+		my $checksum = $self->get_checksum();
+		return { 'error' => 'Checksum mismatch! :(', 'code' => 'checksum' } if ( $checksum ne $checksum );
+
+		open( OUTFILE, '>', $self->{'filename'} ) or return { 'error' => 'Failed to open file for writing!', 'code' => 'permission' };
+		print OUTFILE $self->get_encoded();
+		close OUTFILE;
 		
-		print "******* Would save: \n";
-		print join( "\n", @{$self->{'content'}} );
-		print "\n*******************\n";
+		return {};
 	}
 	
 	sub updated {
