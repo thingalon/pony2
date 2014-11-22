@@ -1,0 +1,17 @@
+{
+	"name": "atom-shell-",
+	"description": "atom-shell wrapper goop based on https://gist.github.com/chitacan/427fe11ad6beb8b276fb",
+	"scripts": {
+		"install": "grunt install"
+	},
+	"author": "chitacan",
+	"license": "BSD-2-Clause",
+	"dependencies": {
+		"load-grunt-tasks": "*",
+		"grunt": "*",
+		"grunt-download-atom-shell": "*",
+		"grunt-shell": "*",
+		"react-tools": "*",
+		"app": "file:./app/"
+	}
+}

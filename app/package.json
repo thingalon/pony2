@@ -1,6 +1,14 @@
 {
-	"name":    "PonyEdit 2",
+	"name": "ponyedit",
 	"version": "2.0.0",
-	"main":    "main.js"
+	"description": "Super fast SSH editor",
+	"author": "thingalon",
+	
+	"main": "main.js",
+
+	"dependencies": {
+		"ssh2": "*",
+		"MD5": "*"
+	}
 }
 
