@@ -27,3 +27,7 @@ build/Release
 node_modules
 
 binaries
+.sass-cache
+*.css.map
+*.gen.css
+
