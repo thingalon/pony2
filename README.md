@@ -1,7 +1,10 @@
+Don't use this. It's fugly test code.
+
 ### To get started
 ```shell
 npm install
-grunt run```
+grunt run
+```
 
 ### If you're on OSX, do this first:
 ```shell
