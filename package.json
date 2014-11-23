@@ -10,6 +10,8 @@
 		"load-grunt-tasks": "*",
 		"grunt": "*",
 		"grunt-download-atom-shell": "*",
+		"grunt-contrib-sass": "*",
+		"grunt-react": "*",
 		"grunt-shell": "*",
 		"react-tools": "*",
 		"app": "file:./app/"
