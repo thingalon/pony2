@@ -1,5 +1,6 @@
 module.exports = function(grunt) {
 	require('load-grunt-tasks')(grunt);
+	grunt.loadNpmTasks('grunt-contrib-sass');	
 	
 	var fs	 = require('fs')
 		, path = require('path')
@@ -9,6 +10,16 @@ module.exports = function(grunt) {
 		'download-atom-shell': {
 			version: '0.13.3',
 			outputDir: dir
+		},
+		'sass': {
+			'dist': {
+				'options': {
+					'style': 'expanded'
+				},
+				'files': {
+					'app/ui/style/main.css': 'app/ui/style/main.scss'
+				}
+			}
 		},
 		'shell': {
 			'mac': {
@@ -25,6 +36,7 @@ module.exports = function(grunt) {
  
 	grunt.registerTask('default', [
 		'install',
+		'sass',
 		'run'
 	]);
 	
