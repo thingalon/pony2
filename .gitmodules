@@ -1,0 +1,4 @@
+[submodule "tools/react-devtools"]
+	path = tools/react-devtools
+	url = https://github.com/facebook/react-devtools.git
+	branch = master
