@@ -30,4 +30,5 @@ binaries
 .sass-cache
 *.css.map
 *.gen.css
+*.gen.js
 

@@ -31,14 +31,26 @@ module.exports = function(grunt) {
 			'win': {
 				command: dir + '\\atom.exe app'
 			}
-		}
-	});
+		},
+		'react': {
+			'dynamic_mappings': {
+				'files': [ {
+					'expand': true,
+					'cwd': 'app/ui/src',
+					'src': [ '*.jsx' ],
+					'dest': 'app/ui/js',
+					'ext': '.gen.js'
+				} ]
+			}
+ 		}
+	} );
  
-	grunt.registerTask('default', [
+	grunt.registerTask( 'default', [
 		'install',
 		'sass',
+		'react',
 		'run'
-	]);
+	] );
 	
 	grunt.registerTask('init', 'initialize project', function() {
 		var cwd		 = process.cwd()
