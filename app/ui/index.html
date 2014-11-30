@@ -6,27 +6,38 @@
 		<!-- 3rd party things -->
 		<link rel="stylesheet" type="text/css" href="vendor/font-awesome/css/font-awesome.css">
 		<script src="vendor/ace/src-noconflict/ace.js"></script>
-		<script src="vendor/react/react.js"></script>
+		<script src="vendor/react/react-with-addons.js"></script>
 		
 		<!-- Pony things -->
 		<link rel="stylesheet" type="text/css" href="style/main.gen.css">
-		<script src="filedialog.js"></script>
-		<script src="filemanager.js"></script>
-		<script src="jobhandle.js"></script>
-		<script src="remotefile.js"></script>
-		<script src="codeeditorview.js"></script>
-		<script src="menu.js"></script>
-		<script src="settings.js"></script>
+
 		<script src="../common/type.js"></script>
 		<script src="../common/tools.js"></script>
 		<script src="../common/filetype.js"></script>
 
+		<script src="js/favoritepathslist.gen.js"></script>
+		<script src="js/filedialog.gen.js"></script>
+		<script src="js/filetable.gen.js"></script>
+		<script src="js/filledicon.gen.js"></script>
+		<script src="js/menu.gen.js"></script>
+		<script src="js/jobhandle.gen.js"></script>
+		<script src="js/settings.gen.js"></script>
+		<script src="js/statusarea.gen.js"></script>
+		
+		<!--
+			<script src="filedialog.js"></script>
+			<script src="filemanager.js"></script>
+			<script src="jobhandle.js"></script>
+			<script src="remotefile.js"></script>
+			<script src="codeeditorview.js"></script>
+			<script src="menu.js"></script>
+		-->
 	</head>
 	<body>
 		<!--
 			Overlay container
 		-->
-		<div class="overlay-layer">
+		<div id="overlay-layer" class="overlay-layer">
 		</div>
 	
 		<!--
@@ -44,32 +55,7 @@
 		-->		
 		<template id="file-dialog-template">
 			<div class="overlay">
-				<div class="dialog file-dialog">
-					<span class="title">
-						Open File
-					</span>
-					<div class="content">
-						<div class="top-bar">
-							<input class="path" type="text">
-							<button class="up fa fa-level-up" title="Parent Directory"></button>
-							<button class="refresh fa fa-refresh" title="Refresh"></button>
-						</div>
-						<div class="columns">
-							<div class="folders">
-								<ul>
-									<li><span class="head">Favorite Locations</span> <ul class="favorites">
-										<li class="add-favorite"><i class="fa fa-plus-circle"></i> Add Favorite</li>
-									</ul></li>
-								</ul>
-							</div>
-							<div class="files"></div>
-						</div>
-						<div class="button-bar">
-							<button class="cancel">Cancel</button>
-							<button class="ok">OK</button>
-						</div>
-					</div>
-				</div>
+
 			</div>
 		</template>
 		
@@ -85,66 +71,4 @@
 			</div>
 		</template>
 	</body>
-	
-	<script>
-		var remote = require('remote');
-		var Menu = remote.require('menu');
-		var MenuItem = remote.require('menu-item');
-		var ipc = require( 'ipc' );
-
-		var mainMenuTemplate = [ 
-			{
-				label: 'PonyEdit 2',
-				submenu: [
-					{
-						label: 'Quit',
-						accelerator: 'Command+Q',
-						click: function() {
-							remote.require( 'app' ).quit();
-						}
-					},
-					{
-						label: 'Show Developer Console',
-						accelerator: 'Alt+Command+I',
-						click: function() {
-							require( 'ipc' ).send( 'show-console' );
-						}
-					},
-				],
-			}, {
-				label: 'File',
-				submenu: [
-					{
-						label: 'Open File',
-						accelerator: 'Command+O',
-						click: function() {
-							new FileDialog( {
-								onDone: function( filenames ) {
-									if ( filenames.length > 0 ) {
-										window.file = FileManager.open( filenames[0] );
-										window.editor = new CodeEditorView( window.file, $( '.view-stack' ) );								
-									}
-								}
-							} );							
-						},
-					},
-					{
-						label: 'Save',
-						accelerator: 'Command+S',
-						click: function() {
-							if ( ! window.file ) {
-								alert( "Open something first." );
-								return;
-							}
-							
-							window.file.save( window.editor.getChecksum() );
-						},
-					},
-					{ label: 'Do other stuff' },
-				],
-			}
-		];
-		var mainMenu = Menu.buildFromTemplate( mainMenuTemplate );
-		Menu.setApplicationMenu( mainMenu );
-	</script>
 </html>

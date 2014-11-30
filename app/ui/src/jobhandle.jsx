@@ -5,8 +5,7 @@
 var ipc = window.ipc || require( 'ipc' );
 
 function JobHandle( args ) {
-	var defaults = {};
-	this.args = $.extend( defaults, args );
+	this.args = args;
 
 	//	Create the Job on the browser-side.
 	this.status = ipc.sendSync( 'Job.create', { 

@@ -7,7 +7,7 @@ body {
 	cursor: default;
 }
 
-/* Main Layout */
+//	Main Layout
 div.main-layout {
 	display: flex;
 	flex-direction: row;
@@ -40,7 +40,7 @@ div.editor {
 	left: 0px;
 }
 
-/* Views */
+//	Views
 div.view-wrap {
 	width: 100%;
 	height: 100%;
@@ -52,7 +52,7 @@ div.view-wrap {
 	}
 }
 
-/* Generally useful things */
+//	Generally useful things
 div.progress-bar {
 	display: inline-block;
 	width: 20em;
@@ -74,8 +74,49 @@ div.progress-bar {
 	}
 }
 
+div.bg-icon {	//	Big background font-awesome icon wrapper
+	font-size: 200px;
+	position: absolute;
+	width: 100%;
+	height: 0;
+	top: 50%;
+	margin-top: -100px;
+	line-height: 200px;
+	text-align: center;
+	opacity: 0.3;
+}
 
-/* Overlays and dialogs */
+div.status-area { 	//	Big flat-color area with a status message, maybe a bg-icon
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	
+	span.message {
+		display: block;
+		width: 100%;
+		text-align: center;
+		z-index: 10;
+	}
+	
+	&.error {
+		background-color: rgb( 126, 73, 73 );	
+		span.message { color: white; }
+	}
+
+	&.loading {
+		background-color: #999;
+		span.message { color: white; }
+	}
+}
+
+
+//	Overlays and dialogs
 div.overlay-layer {
 	position: absolute;
 	width: 100%;
@@ -121,8 +162,58 @@ div.dialog {
 		}
 	}
 }
+
+//	Favorites
+ul.favorites {
+	li.favorite {
+		position: relative;	
+
+		&.editing {
+			padding: 5px;
+			border-top: 1px solid gray;
+			border-bottom: 1px solid gray;
+			background-color: white;
+			
+			input {
+				width: 95%;
+			}
+			
+			div.button-bar {
+				text-align: right;
+				padding: 0px;
+				
+				button {
+					width: 40%;
+					margin: 2px;
+
+					&.delete {
+						color: red;
+					}
+					
+					&.done {
+						color: green;
+					}
+				}
+			}
+		}
+		
+		a.edit {
+			float: right;
+			text-decoration: none;
+			color: black;
+			visibility: hidden;
+		}
+		
+		&:hover {
+			a.edit {
+				visibility: visible;
+			}
+		}
+	}
+}
+
 	
-/* File dialog */
+//	File dialog
 div.file-dialog {
 	width: 800px;
 	height: 450px;
@@ -178,11 +269,7 @@ div.file-dialog {
 		background-color: white;
 		overflow: scroll;
 		position: relative;
-
-		&.loading {
-			background-color: #999;
-		}
-
+		
 		table {
 			width: 100%;
 			table-layout: fixed;
@@ -190,30 +277,37 @@ div.file-dialog {
 			border-spacing: 0px;
 			border-collapse: collapse;
 
-			tr.head {
-				background-color: #eee;
-
-				th {
-					padding: 5px;
-					font-weight: normal;
-					border: 1px solid #ddd;
+			tr{
+				&.head {
+					background-color: #eee;
+	
+					th {
+						padding: 5px;
+						font-weight: normal;
+						border: 1px solid #ddd;
+					}
 				}
-			}
-			
-			tr.second {
-				background-color: #def;
-			}
-
-			tr td:not(:first-child) {
-				width: 150px;
-			}
-
-			td {
-				padding: 2px 5px;
 				
-				.fa-stack {
-					height: 1ex;
-					line-height: 1ex;
+				&.second {
+					background-color: #def;
+				}
+				
+				&.selected {
+					background-color: rgb( 137, 184, 255 );
+					color: white;
+				}
+
+				td:not(:first-child) {
+					width: 150px;
+				}
+
+				td {
+					padding: 2px 5px;
+					
+					.fa-stack {
+						height: 1ex;
+						line-height: 1ex;
+					}
 				}
 			}
 		}

@@ -5,6 +5,13 @@ var fs = require( 'fs' );
 var settingsFile = null;
 var settings = {};
 
+//	Special settings, which can't be set but can be used to get system config stuff
+var specialSettings = {
+	homeDirectory: function() {
+		return process.env[ ( process.platform == 'win32' ) ? 'USERPROFILE' : 'HOME' ];
+	},
+};
+
 function initSettings() {
 	if ( settingsFile )
 		return;
@@ -46,6 +53,9 @@ exports.set = function( key, value ) {
 
 exports.get = function( key, defaultValue ) {
 	initSettings();
+	
+	if ( specialSettings.hasOwnProperty( key ) )
+		return specialSettings[ key ]();
 	
 	if ( settings.hasOwnProperty( key ) )
 		return settings[ key ];
