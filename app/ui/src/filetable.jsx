@@ -19,15 +19,19 @@ var FileTable = React.createClass( {
 	
 	componentDidUpdate: function() {
 		if ( this.props.path != this.state.path ) {
-			this.setState( {
-				loaded: false,
-				error: null,
-				path: this.props.path,
-				selected: {},
-				focusedFile: null,
-			} );
-			this.load();
+			this.forceLoad();
 		}
+	},
+	
+	forceLoad: function() {
+		this.setState( {
+			loaded: false,
+			error: null,
+			path: this.props.path,
+			selected: {},
+			focusedFile: null,
+		} );
+		this.load();
 	},
 	
 	load: function() {
@@ -81,6 +85,14 @@ var FileTable = React.createClass( {
 	
 	getSelected: function() {
 		return Object.keys( this.state.selected );
+	},
+	
+	isDirectory: function( filename ) {
+		var entry = this.state.entries[ filename ];
+		if ( ! entry )
+			return false;
+		else
+			return ( entry.f.indexOf( 'd' ) !== -1 );
 	},
 	
 	onRowClick: function( event ) {

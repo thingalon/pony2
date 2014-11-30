@@ -29,21 +29,7 @@ var mainMenuTemplate = [
 				label: 'Open File',
 				accelerator: 'Command+O',
 				click: function() {
-					React.render( 
-						<div className="overlay">
-							<FileDialog />
-						</div>,
-						document.getElementById( 'overlay-layer' )
-					);
-					
-/*							new FileDialog( {
-						onDone: function( filenames ) {
-							if ( filenames.length > 0 ) {
-								window.file = FileManager.open( filenames[0] );
-								window.editor = new CodeEditorView( window.file, $( '.view-stack' ) );								
-							}
-						}
-					} );		*/					
+					App.showOpenDialog();
 				},
 			},
 			{
