@@ -25,7 +25,7 @@ div.main-layout {
 		background-color: #ddd;
 	}
 	
-	div.view-stack {
+	div#view-stack-mount {
 		flex-grow: 1;
 		height: 100%;
 		position: relative;
@@ -112,6 +112,11 @@ div.status-area { 	//	Big flat-color area with a status message, maybe a bg-icon
 	&.loading {
 		background-color: #999;
 		span.message { color: white; }
+	}
+	
+	&.blank {
+		background-color: #eee;
+		span.message { color: #333; }
 	}
 }
 
