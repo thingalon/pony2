@@ -1,0 +1,55 @@
+//
+//	FileView - one view of a file, including load status, etc.
+//
+
+var FileView = React.createClass( {
+
+	getInitialState: function() {
+		this.file = this.props.file;
+		this.file.onStateChange( Tools.cb( this, this.onStateChange ) );
+	
+		return {
+			file: this.props.file,
+			fileState: this.file.state,
+		};	
+	},
+	
+	onStateChange: function() {
+		this.setState( {
+			fileState: this.file.state,
+		} );
+	},
+
+	render: function() {
+		switch ( this.state.fileState ) {
+			case RemoteFile.State.closed:
+				return (
+					<StatusArea type="error" icon="fa-warning">
+						File closed.
+					</StatusArea>
+				);
+			
+			case RemoteFile.State.opening:
+				return (
+					<StatusArea type="loading" icon="fa-cloud-download">
+						Loading...
+					</StatusArea>
+				);
+			
+			case RemoteFile.State.open:
+				return (
+					<textarea>
+						{ this.file.content }
+					</textarea>
+				);
+			
+			case RemoteFile.State.error:
+				return (
+					<StatusArea type="error" icon="fa-warning">
+						Error: { this.file.errorMessage }
+					</StatusArea>
+				);
+		}
+	},
+
+} );
