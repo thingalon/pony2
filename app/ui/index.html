@@ -22,6 +22,7 @@
 		<script src="js/filledicon.gen.js"></script>
 		<script src="js/menu.gen.js"></script>
 		<script src="js/jobhandle.gen.js"></script>
+		<script src="js/remotefile.gen.js"></script>
 		<script src="js/settings.gen.js"></script>
 		<script src="js/statusarea.gen.js"></script>
 		
@@ -47,7 +48,7 @@
 		<div class="main-layout">
 			<div class="left-bar">
 			</div>
-			<div class="view-stack">
+			<div id="view-stack-mount">
 			</div>
 		</div>
 
@@ -72,4 +73,8 @@
 			</div>
 		</template>
 	</body>
+	
+	<script>
+		App.initialize();
+	</script>
 </html>

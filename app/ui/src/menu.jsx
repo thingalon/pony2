@@ -48,6 +48,4 @@ var mainMenuTemplate = [
 		],
 	}
 ];
-var mainMenu = Menu.buildFromTemplate( mainMenuTemplate );
-Menu.setApplicationMenu( mainMenu );
 
