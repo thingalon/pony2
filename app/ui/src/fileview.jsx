@@ -38,9 +38,7 @@ var FileView = React.createClass( {
 			
 			case RemoteFile.State.open:
 				return (
-					<textarea>
-						{ this.file.content }
-					</textarea>
+					<Editor file={ this.file } key={ this.file.path }/>
 				);
 			
 			case RemoteFile.State.error:

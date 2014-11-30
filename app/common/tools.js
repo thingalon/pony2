@@ -9,13 +9,6 @@ if ( isNode ) {
 
 ( function( Tools ) {
 
-	//	Load the contents of a <template> block into the target DOM element
-	Tools.loadTemplate = function( target, template ) {
-		var t = $( $( 'template#' + template + '-template' ).html() );
-		target.append( t );
-		return t;
-	}
-
 	//	Handy helper to ensure callbacks get called with the right 'this'.
 	Tools.cb = function( object, fn, extra ) {
 		return function() {
@@ -119,14 +112,6 @@ if ( isNode ) {
 			return ( size / 1000000000 ).toFixed( 1 ) + ' GB';
 		else
 			return ( size / 1000000000000 ).toFixed( 1 ) + ' TB';
-	}
-	
-	//	UI: Create an outlined icon using FontAwesome's -o notation and stacking
-	Tools.iconStack = function( icon, color ) {
-		var span = $( '<span>' ).addClass( 'fa-stack' );
-		span.append( $( '<i>' ).addClass( 'fa fa-stack-1x ' + icon ).css( 'color', color ) );
-		span.append( $( '<i>' ).addClass( 'fa fa-stack-1x ' + icon + '-o' ) );
-		return span;
 	}
 	
 } ( isNode ? exports : this.Tools = {} ) );
