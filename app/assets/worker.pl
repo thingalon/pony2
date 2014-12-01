@@ -26,7 +26,6 @@ sub main {
 	my $client_key = generate_key();
 	my $listen_socket = create_listen_socket();
 	my $listen_port = get_listen_port( $listen_socket );
-	my $cache_key = get_cache_key();
 	
 	print_header( $client_key, $listen_port );
 	listen_loop( $client_key, $listen_socket );
@@ -55,7 +54,7 @@ sub get_listen_port {
 }
 
 sub get_cache_key() {
-	my $key_file = $ENV{"HOME"} . '/.ponybridge/cache_key';
+	my $key_file = $ENV{"HOME"} . '/.pony2/cache_key';
 	my $key;
 
 	if ( -e $key_file && open my $rh, $key_file ) {
@@ -172,7 +171,7 @@ sub read_timeout {
 		my ( $message ) = @_;
 		
 		if ( ! defined( $log_file ) ) {
-			open( $log_file, '>>', $ENV{"HOME"} . '/.ponybridge/log.txt' ) or die ($! );
+			open( $log_file, '>>', $ENV{"HOME"} . '/.pony2/log.txt' ) or die ($! );
 			my $old_fh = select( OUTPUT_HANDLE );
 			$| = 1;
 			select( $old_fh );
