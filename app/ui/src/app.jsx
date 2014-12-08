@@ -10,6 +10,13 @@ var App = {
 		//	Setup Main Menu
 		this.mainMenu = Menu.buildFromTemplate( mainMenuTemplate );
 		Menu.setApplicationMenu( this.mainMenu );
+		
+		//	Setup the left bar
+		this.leftBar = React.render(
+			<LeftBar />,
+			document.getElementById( 'left-bar-mount' )
+		);
+		this.openFileTree = this.leftBar.refs.openFileTree;
 
 		//	Setup View Stack
 		this.viewStack = React.render(
@@ -38,6 +45,7 @@ var App = {
 		if ( ! this.files[ filename ] ) {
 			this.files[ filename ] = new RemoteFile( filename );
 			this.files[ filename ].open();
+			this.openFileTree.updateFiles( this.files );
 		}
 		
 		this.viewStack.showFile( this.files[ filename ] );
