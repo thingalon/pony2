@@ -71,9 +71,14 @@ var OpenFileTree = React.createClass( {
 		} )
 	},
 	
+	onFileClick: function( event ) {
+		var path = event.currentTarget.getAttribute( 'data-path' );
+		App.openFile( path );
+	},
+	
 	renderFile: function( file ) {
 		return (
-			<li key={ file.path } className="file">
+			<li key={ file.path } className="file" onClick={ this.onFileClick } data-path={ file.path }>
 				{ file.label }
 			</li>
 		);
