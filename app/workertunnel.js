@@ -76,9 +76,11 @@ WorkerTunnel.prototype.onData = function( data ) {
 	var length = this.readBuffer.readUInt32BE( 1 );			
 
 	if ( this.readBuffer.length >= length + 5 ) {
-		//	We have a complete packet! 
+		//	We have a complete packet! TODO: This shouldn't discard the whole buffer, just in case there are leftovers.
 		var message = Binary.decode( this.readBuffer, 5 );
 		this.readBuffer = null;
+		
+		console.log( message );
 		
 		if ( message ) {
 			if ( message.hasOwnProperty( 'error' ) && message.hasOwnProperty( 'code' ) )

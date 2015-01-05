@@ -134,3 +134,12 @@ String.prototype.contains = function( substring ) {
     return this.indexOf( substring ) !== -1;
 };
 
+Object.defineProperty( Object.prototype, 'map', {
+	value: function( f ) {
+		var self = this;
+		var result = {};
+		for ( var key in this )
+			result[ key ] = f.call( this, key, this[ key ] );
+        return result;
+    }
+});

@@ -1,5 +1,5 @@
 //
-//	Tools to transform JSON objects into binary blobs for transmissions, and vice-versa.
+//	Tools to transform JSON objects into binary blobs for transmission, and vice-versa.
 //
 
 var Binary = {};

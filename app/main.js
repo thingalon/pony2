@@ -17,6 +17,7 @@ ipc.on( 'show-console', function() {
 	mainWindow.openDevTools();
 } );
 
+
 //	Create the main window, load the main UI
 var mainWindow = null;
 app.on( 'ready', function() {

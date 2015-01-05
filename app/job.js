@@ -31,9 +31,9 @@ function Job( job, args, sender ) {
 
 Job.prototype.encode = function() {
 	return Binary.encode( {
-		id: this.id,
-		job: this.job,
-		args: this.args,
+		i: this.id,
+		j: this.job,
+		a: this.args,
 	} );
 }
 

@@ -31,20 +31,39 @@ Host.state = {
 };
 Host.shellPrompt = '****** PONYEDIT 2 PROMPT ******';
 
-//	At app start-time, load worker.pl and calculate its hash.
-Host.workerScript = fs.readFileSync( __dirname + '/assets/worker.pl' );
-Host.workerScriptHash = crypto.createHash( 'md5' ).update( Host.workerScript, 'utf8' ).digest( 'hex' );
+//	At app start-time, load each worker script and its hash.
+( function() {
+	var scripts = {
+		binary: 'binary.js',
+		jobs: 'assets/jobs.js',
+		worker: 'assets/worker.js',
+	};
 
-//	One-liner for checking perl, checking the worker script, and starting the worker script if ok.
-Host.initCommand = "stty -echo\nunset HISTFILE\nperl -e '" +
-	'sub x{print$_[0]."\\n";exit;}' +	//	sub x = print string and exit.
-	'x"OLD_"."PERL$]"if($]<5.01);' +	//	Check perl version
-	'use Digest::file qw(digest_file_hex);' +
-	'$f=$ENV{"HOME"}."/.pony2/worker.pl";' + 
-	'x"NO_"."WORKER"if(!-e$f);' +	//	Check worker exists
-	'x"OLD_"."WORKER"if(digest_file_hex($f,"MD5")ne"' + Host.workerScriptHash + '");' +	//	Check worker md5 hash
-	'exec "perl $f"' +	//	Run worker
-"'||perl -e 'print \"BORK_''PERL\";'||echo 'NO_''PERL';echo '****** PONYEDI''T 2 PROMPT ******'\n";	//	Output error if no perl found
+	Host.workerScripts = {};	
+	Host.workerHashes = {};
+	for ( var key in scripts ) {
+		var path = __dirname + '/' + scripts[ key ];
+		var data = fs.readFileSync( path );
+		var hash = crypto.createHash( 'md5' ).update( data, 'utf8' ).digest( 'hex' );
+		
+		Host.workerScripts[ key ] = data;
+		Host.workerHashes[ key ] = hash;
+	}
+} )();
+
+//	One-shot for checking remote node, checking the worker script, and starting the worker script if ok.
+Host.initCommand = "stty -echo\nunset HISTFILE\nnode -e \"" +
+	"f=require('fs'),c=require('crypto'),p=process.env['HOME']+'/.pony2/',h=" + JSON.stringify( Host.workerHashes ).replace( /"/g, "'" ) + ",u=[],s=process.stdout,j=JSON.stringify;" +
+	"for(n in h){" +
+		"t=p+n+'.js';" +
+		"if(! f.existsSync(t)||c.createHash('md5').update(f.readFileSync(t)).digest('hex')!=h[n])" +
+			"u.push(n);" +
+	"}" +
+	"if(u.length)" +
+		"s.write(j({s:'UPDATE_'+'WORKER',f:u}));" +
+	"else " +
+		"require(p+'worker.js');" +
+"\"||node -e \"console.log('BORK_\"\"NODE')\"||echo 'NO_''NODE';echo '****** PONYEDI''T 2 PROMPT ******'\n";
 
 Host.find = function( user, hostname, createIfMissing ) {
 	for ( var i = 0; i < Host.knownHosts.length; i++ ) {
@@ -176,28 +195,21 @@ Host.prototype.launchWorker = function( inRetry ) {
 		if ( ! result )
 			return host.onConnectionError( 'Timeout while setting up remote prompt!' );
 
-		var resultRegExp = new RegExp( '((?:OK|NO|OLD|BORK)_(?:WORKER|PERL))([0-9.]*)' );
+		var resultRegExp = new RegExp( '((?:OK|NO|BORK|UPDATE)_(?:WORKER|NODE))([0-9.]*)' );
 		var resultMessage = resultRegExp.exec( result );
 		if ( ! resultMessage )
-			return host.onConnectionError( 'Unable to interpret response from server!' );
+			return host.onConnectionError( 'Unable to interpret response from server:\n' + result );
 		
 		var message = resultMessage[1];
 		
-		if ( 'NO_PERL' == message )
-			return host.onConnectionError( 'No Perl found on the remote server!' );
+		if ( 'NO_NODE' == message )
+			return host.onConnectionError( 'No Node.js found on the remote server!' );
 		
-		if ( 'BORK_PERL' == message ) {
-			return host.onConnectionError( 'Perl returned some errors:\n' + result.substring( 0, result.indexOf( 'BORK_PERL' ) ) );
+		if ( 'BORK_NODE' == message ) {
+			return host.onConnectionError( 'Node.js returned some errors:\n' + result.substring( 0, result.indexOf( 'BORK_NODE' ) ) );
 		}
 		
-		if ( 'OLD_PERL' == message ) {
-			var version = resultMessage[2];
-			var versionRegExp = new RegExp( '([0-9]+).([0-9]{3})' );
-			var prettyVersion = versionRegExp ? versionRegExp[1] + '.' + (versionRegExp[2] - 0) : 'unknown';
-			return host.onConnectionError( 'The remote server is running an old version of Perl (' + prettyVersion + '). Please upgrade to at least 5.10' );
-		}
-		
-		if ( 'NO_WORKER' == message || 'OLD_WORKER' == message ) {
+		if ( 'UPDATE_WORKER' == message ) {
 			if ( inRetry ) {
 				//	Already tried updating the worker and it didn't work.
 				return host.onConnectionError( 'Tried to update the remote worker script, but something went wrong.' );
@@ -205,10 +217,25 @@ Host.prototype.launchWorker = function( inRetry ) {
 
 			console.log( 'Uploading worker script...' );
 
-			//	Need to update the worker and try again.
-			var encodedWorker = new Buffer( Host.workerScript ).toString( 'base64' );
-			var upload = 'mkdir -p ~/.pony2; echo "' + encodedWorker + '" | perl -MMIME::Base64 -e \'print decode_base64(join("", <>))\' > ~/.pony2/worker.pl; echo "' + Host.shellPrompt + '"\n';
-			host.runShellCommand( upload, function( result ) {
+			var matches = /{[^{]+UPDATE_WORKER[^}]+}/.exec( result );
+			var details = JSON.parse( matches[0] );
+			var filesToUpdate = details.f;
+			
+			var writes = {};
+			for ( var i in filesToUpdate ) {
+				var key = filesToUpdate[ i ];
+				writes[ key ] = new Buffer( Host.workerScripts[ key ] ).toString( 'base64' );
+			}
+			
+			var uploadScript = 
+				"var d=" + JSON.stringify( writes ).replace( /"/g, "'" ) + ",p=process.env['HOME']+'/.pony2/',f=require('fs');" +
+				"for(i in d)" +
+					"f.writeFileSync(p+i+'.js',new Buffer(d[i],'base64'));";
+			var uploadCmd = 'mkdir -p ~/.pony2;node -e "' + uploadScript + '" && echo "UPLOAD_OK";echo "****** PONYEDI""T 2 PROMPT ******"\n';
+			host.runShellCommand( uploadCmd, function( result ) {
+				if ( result.indexOf( 'UPLOAD_OK' ) == -1 )
+					return host.onConnectionError( 'Failed to upload remote worker script, node uploader failed to execute: ' + result );
+
 				//	Try launching the worker again
 				host.launchWorker( true );
 			} );
@@ -228,24 +255,27 @@ Host.prototype.launchWorker = function( inRetry ) {
 
 //	Called when the worker is successfully running. Parses its output header and finalizes the connection.
 Host.prototype.parseWorkerHeader = function( rawHeader ) {
-	var headMarker = rawHeader.indexOf( '*** HEAD ***' );
-	if ( headMarker === -1 )
-		return host.onConnectionError( 'Invalid worker script header!' );
-	
-	//	Parse the header (key:value format. Why isn't it JSON? Because Perl doesn't support it in core)
-	var header = {};
-	rawHeader = rawHeader.substr( headMarker );
-	var lines = rawHeader.split( '\n' );
-	for ( var i = 0; i < lines.length; i++ ) {
-		var pieces = lines[ i ].split( ':', 2 );
-		if ( pieces.length != 2 )
-			continue;
-		
-		header[ pieces[0] ] = pieces[1].trim();
+	//	Shave off everything up to "*** HEAD ***"
+	var headMarker = '*** HEAD ***';
+	var headMarkerPos = rawHeader.indexOf( headMarker );
+	if ( headMarkerPos === -1 )
+		return this.onConnectionError( 'Invalid worker script header!' );
+	rawHeader = rawHeader.substr( headMarkerPos + headMarker.length );
+
+	//	Shave off the pony prompt
+	var promptPos = rawHeader.indexOf( Host.shellPrompt );
+	if ( promptPos > -1 )
+		rawHeader = rawHeader.substr( 0, promptPos );
+
+	//	Parse it as json
+	try {
+		var header = JSON.parse( rawHeader );
+	} catch ( err ) {
+		return host.onConnectionError( 'Invalid worker script header: could not parse:\n' + rawHeader );
 	}
 	
 	//	Check the header looks valid
-	if ( header.state != 'OK_WORKER' || ! header.port || header.cacheKey.length < 100 || header.clientKey.length < 100 )
+	if ( header.state != 'OK_WORKER' || ! header.port || ! header.clientKey || header.clientKey.length < 20 )
 		return host.onConnectionError( 'Invalid worker script header fields!' );
 	
 	this.workerSettings = header;
