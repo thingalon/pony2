@@ -1,19 +1,17 @@
 //
-//	Job - a potentially long-running request (eg: "get file contents", "read directory")
+//	BrowserJobRequest - represents a job request sent to a Worker script from the Browser layer.
 //
 
 var Binary = require( './binary.js' );
 var Tools = require( '../common/tools.js' );
 var Type = require( '../common/type.js' );
 var Host = require( './host.js' );
-
-
 var ipc = require( 'ipc' );
 
 var jobs = {};
 var nextJobId = 0;
 
-function Job( job, args, sender ) {
+function BrowserJobRequest( job, args, sender ) {
 	this.job = job;
 	this.args = args;
 	this.sender = sender;
@@ -29,7 +27,7 @@ function Job( job, args, sender ) {
 	this.start();
 }
 
-Job.prototype.encode = function() {
+BrowserJobRequest.prototype.encode = function() {
 	return Binary.encode( {
 		i: this.id,
 		j: this.job,
@@ -37,25 +35,25 @@ Job.prototype.encode = function() {
 	} );
 }
 
-Job.getById = function( jobId ) {
+BrowserJobRequest.getById = function( jobId ) {
 	return jobs[ jobId ];
 }
 
-Job.prototype.start = function() {
+BrowserJobRequest.prototype.start = function() {
 	if ( jobTypes[ this.job ] )
 		jobTypes[ this.job ]( this, this.args );
 	else
 		this.fail( 'system', 'Unknown job type: ' + this.job );
 }
 
-Job.prototype.set = function( code, message ) {
+BrowserJobRequest.prototype.set = function( code, message ) {
 	this.status.code = code;
 	this.status.message = message;
 	
 	this.pingStatus();
 }
 
-Job.prototype.fail = function( code, message ) {
+BrowserJobRequest.prototype.fail = function( code, message ) {
 	this.status.state = 'failed';
 	this.status.code = code;
 	this.status.message = message;
@@ -64,7 +62,7 @@ Job.prototype.fail = function( code, message ) {
 	this.destroy();
 }
 
-Job.prototype.done = function( result ) {
+BrowserJobRequest.prototype.done = function( result ) {
 	this.status.state = 'done';
 	this.status.result = result;
 	
@@ -72,29 +70,29 @@ Job.prototype.done = function( result ) {
 	this.destroy();
 }
 
-Job.prototype.destroy = function() {
+BrowserJobRequest.prototype.destroy = function() {
 	delete jobs[ this.id ];
 }
 
-Job.prototype.pingStatus = function() {
+BrowserJobRequest.prototype.pingStatus = function() {
 	if ( this.sender ) {
 		this.sender.send( 'Job.update', this.status );
 	}
 }
 
-Job.prototype.getPathType = function() {
+BrowserJobRequest.prototype.getPathType = function() {
 	return Tools.getPathType( this.args.path );
 }
 
 //	Send this job off to be processed by the specified host, opening a new conneciton if necessary
-Job.prototype.sendToHost = function( user, hostname ) {
+BrowserJobRequest.prototype.sendToHost = function( user, hostname ) {
 	var host = Host.find( user, hostname, true );
 	this.host = host;
 	host.handleJob( this );
 }
 
 //	Checks for a 'path' parameter in the job, if present and looks remote, it sends the job on to the remote host.
-Job.prototype.maybeSendToHost = function() {
+BrowserJobRequest.prototype.maybeSendToHost = function() {
 	//	Find the right host by rfid.
 	if ( this.args.rfid ) {
 		var host = Host.findByRfid( this.args.rfid );
@@ -119,7 +117,7 @@ Job.prototype.maybeSendToHost = function() {
 }
 
 //	Got a message from the remote server; handle it.
-Job.prototype.handleMessage = function( message ) {
+BrowserJobRequest.prototype.handleMessage = function( message ) {
 	//	For now, all messages close jobs. TODO: Make it possible for update messages / partial downloads.
 	if ( message.hasOwnProperty( 'errcode' ) && message.hasOwnProperty( 'errmessage' ) )
 		this.fail( message.errcode, message.errmessage );
@@ -128,7 +126,7 @@ Job.prototype.handleMessage = function( message ) {
 }
 
 //	Export Job class.
-module.exports = Job;
+module.exports = BrowserJobRequest;
 
 //
 //	Available job types
@@ -168,7 +166,7 @@ var jobTypes = {
 
 //	Job.create - create a new job, return a status object.
 ipc.on( 'Job.create', function( event, args ) {
-	var job = new Job( args.job, args.args, event.sender );
+	var job = new BrowserJobRequest( args.job, args.args, event.sender );
 	event.returnValue = job.status;
 } );
 

@@ -1,4 +1,4 @@
-var Job = require( './job.js' );
+var BrowserJobRequest = require( './browserjobrequest.js' );
 var settings = require( './settings.js' );
 var app = require( 'app' );
 var BrowserWindow = require( 'browser-window' );
