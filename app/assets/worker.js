@@ -23,7 +23,6 @@ server.listen( 0, '127.0.0.1', function() {
 	process.stdout.write( '****** PONYEDIT 2 PROMPT ******\n' );
 } );
 
-
 function chopBuffer( buffer, bytes ) {
 	if ( buffer.length > bytes ) {
 		var choppedBuffer = new Buffer( buffer.length - bytes );
@@ -99,10 +98,11 @@ function messageSuccess( message, result ) {
 	} );
 }
 
-function messageFailure( message, error ) {
+function messageFailure( message, code, error ) {
 	sendPacket( message.socket, {
 		i: message.i,
-		e: error,
+		errcode: code,
+		errmessage: error,
 	} );
 }
 

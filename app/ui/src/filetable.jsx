@@ -46,9 +46,17 @@ var FileTable = React.createClass( {
 	},
 	
 	lsSuccess: function( job, result ) {
+		//	Split the flags string up
+		for ( var i in result.r ) {
+			var entry = result.r[ i ];
+			entry.flags = {};
+			for ( var j = 0; j < entry.f.length; j++ )
+				entry.flags[ entry.f.substr( j, 1 ) ] = 1;
+		}
+
 		this.setState( {
 			loaded: true,
-			entries: result.entries
+			entries: result.r
 		} );
 	},
 	
@@ -151,19 +159,37 @@ var FileTable = React.createClass( {
 	
 	renderFile: function( filename, index ) {
 		var entry = this.state.entries[ filename ];
-		var isDir = ( entry.f.indexOf( 'd' ) !== -1 );
+		var isDir = entry.flags.d;
+		var isLink = entry.flags.l;
+		var isBroken = entry.flags.b;
 		
 		var className = ( index % 2 == 0 ? 'first' : 'second' ) + ( this.state.selected[ filename ] ? ' selected' : '' );
 		var icon = ( isDir ? 'fa-folder' : 'fa-file' );
 		var iconColor = ( isDir ? '#f90' : '#fff' );
+
+		if ( isLink ) {
+			//	Show symlink info instead of size.
+			var linkIcon = ( isBroken ? 'fa-chain-broken' : 'fa-link' );
+			var linkDescription = ( isBroken ? 'Broken link (' : 'Link (' ) + entry.t + ')';
+			var entryInfo = <td className="info" colSpan="2"><i className={ 'fa ' + linkIcon } /> { linkDescription }</td>;
+		} else {
+			//	Show size and date.
+			var entryInfo = [
+				<td className="info" key="size">{ isDir ? '' : Tools.prettySize( entry.s ) }</td>,
+				<td className="info" key="date">{ entry.m > 0 ? new Date( entry.m ).toLocaleString()  : '' }</td>,
+			];
+		}
+
+		if ( isBroken ) {
+			icon = 'fa-chain-broken';
+			iconColor = null;
+		}
 		
 		var table = this;
-		
 		return (
 			<tr key={ filename } className={ className } onClick={ this.onRowClick } data-filename={ filename }>
 				<td><FilledIcon icon={ icon } color={ iconColor } /> { filename }</td>
-				<td>{ isDir ? '' : Tools.prettySize( entry.s ) }</td>
-				<td>{ entry.m > 0 ? new Date( entry.m ).toLocaleString()  : '' }</td>
+				{ entryInfo }
 			</tr>
 		);
 	},
@@ -192,8 +218,8 @@ var FileTable = React.createClass( {
 				<table className="files">
 					<tr className="head">
 						<th>Filename</th>
-						<th>Size</th>
-						<th>Last Modified</th>
+						<th className="info">Size</th>
+						<th className="info">Last Modified</th>
 					</tr>
 					{ rows }
 				</table>

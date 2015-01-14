@@ -27,10 +27,10 @@ app.on( 'ready', function() {
 	} );
 
 	mainWindow.loadUrl('file://' + __dirname + '/ui/index.html');
-	
+
 	mainWindow.on('closed', function() {
 		mainWindow = null;
 	});
-	
+
 	mainWindow.focus();
 } );

@@ -118,6 +118,15 @@ Job.prototype.maybeSendToHost = function() {
 	return false;
 }
 
+//	Got a message from the remote server; handle it.
+Job.prototype.handleMessage = function( message ) {
+	//	For now, all messages close jobs. TODO: Make it possible for update messages / partial downloads.
+	if ( message.hasOwnProperty( 'errcode' ) && message.hasOwnProperty( 'errmessage' ) )
+		this.fail( message.errcode, message.errmessage );
+	else
+		this.done( message );
+}
+
 //	Export Job class.
 module.exports = Job;
 

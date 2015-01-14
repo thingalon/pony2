@@ -143,3 +143,13 @@ Object.defineProperty( Object.prototype, 'map', {
         return result;
     }
 });
+
+Buffer.prototype.chop = function( bytes ) {
+	if ( this.length > bytes ) {
+		var choppedBuffer = new Buffer( this.length - bytes );
+		this.copy( choppedBuffer, 0, bytes );
+		return choppedBuffer;
+	}
+	
+	return new Buffer( 0 );
+}

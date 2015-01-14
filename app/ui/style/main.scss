@@ -332,11 +332,16 @@ div.file-dialog {
 						padding: 5px;
 						font-weight: normal;
 						border: 1px solid #ddd;
+						width: 50%;
+						
+						&.info {
+							width: 25%;
+						}
 					}
 				}
 				
 				&.second {
-					background-color: #def;
+					background-color: #eef6ff;
 				}
 				
 				&.selected {
@@ -350,10 +355,18 @@ div.file-dialog {
 
 				td {
 					padding: 2px 5px;
+					white-space: nowrap;
+					overflow: ellipsis;
+					width: 50%;
 					
 					.fa-stack {
 						height: 1ex;
 						line-height: 1ex;
+					}
+					
+					&.info {
+						color: #aaa;
+						width: 25%;
 					}
 				}
 			}

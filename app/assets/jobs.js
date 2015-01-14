@@ -13,30 +13,45 @@ Jobs.ls = function( message, success, failure ) {
 	//	Read directory.
 	fs.readdir( path, function( err, files ) {
 		if ( err )
-			return failure( message, err );
+			return failure( message, err.errno, 'Failed to read ' + path );
 		
 		//	Go through and stat each entry, work out some basic details.
 		var filesToDo = files.length;
 		var fileDetails = {};
 		for ( var i = 0; i < files.length; i++ ) {
 			( function( file ) {
+				if ( file.substr( 0, 1 ) == '.' ) {
+					filesToDo--;
+					return;
+				}
+			
 				var fullPath = path + '/' + file;
 				fs.lstat( fullPath, function statDone( err, stats ) {
 					filesToDo--;
 					
 					var size = 0;
 					var flags = '';
+					var target = null;
+					var lastModified = null;
 					
 					//	Follow symlinks
 					if ( stats && stats.isSymbolicLink() ) {
-						flags += 's';
-						stats = fs.statSync( fullPath );
+						flags += 'l';
+						try {
+							target = fs.readlinkSync( fullPath );
+							stats = fs.statSync( fullPath );
+							console.log( stats );
+						} catch ( e ) {
+							stats = null;
+						}
+						
 						if ( ! stats )
 							flags += 'b';
 					}
 					
 					if ( stats ) {
 						size = stats.size;
+						lastModified = stats.mtime.getTime();
 						
 						if ( stats.isDirectory() )
 							flags += 'd';
@@ -60,7 +75,9 @@ Jobs.ls = function( message, success, failure ) {
 						}
 					}
 					
-					fileDetails[ file ] = { s: size, f: flags };
+					fileDetails[ file ] = { s: size, f: flags, m: lastModified };
+					if ( target )
+						fileDetails[ file ].t = target;
 
 					//	Check if that was the last call to stat...
 					if ( filesToDo <= 0 )
@@ -79,10 +96,6 @@ function expandPath( path ) {
 	if ( ! /\/$/.test( home ) )
 		home += '/';
 	path = path.replace( /^\/?~(\/|$)/, home );
-
-	//	Ensure path does not end with /
-	while ( /\/$/.test( path ) )
-		path = path.substr( 0, path.length - 1 );
 	
 	return path;
 }

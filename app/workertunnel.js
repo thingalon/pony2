@@ -8,7 +8,8 @@ var Binary = require( './binary.js' );
 function WorkerTunnel( host ) {
 	this.host = host;
 	this.queue = [];
-	this.busy = true;
+	this.connected = false;
+	this.sentJobs = {};
 	this.readBuffer = null;
 	this.tunnelId = WorkerTunnel.nextTunnelId++;
 	this.nextMessageId = 0;
@@ -28,7 +29,7 @@ function WorkerTunnel( host ) {
 		
 		//	Send the client key.
 		stream.write( new Buffer( host.workerSettings.clientKey ) );
-		tunnel.busy = false;
+		tunnel.connected = true;
 		
 		tunnel.updateQueue();
 	} );
@@ -38,16 +39,21 @@ WorkerTunnel.nextTunnelId = 0;
 
 //	Called whenever the queue changes state, to check if we can send anything down the wire.
 WorkerTunnel.prototype.updateQueue = function() {
-	if ( this.busy )
+	if ( ! this.connected )
 		return;
 
-	if ( this.queue.length == 0 )
-		return;
+	while ( this.queue.length > 0 ) {
+		var job = this.queue.shift();
+		this._sendJob( job );
+	}
+}
+
+//	Internal use only: send a job through the network socket.
+WorkerTunnel.prototype._sendJob = function( job ) {
+	this.sentJobs[ job.id ] = job;
 	
 	//	Encode the job for sending.
-	var job = this.queue.shift();
-	this.currentJob = job;
-	var blob = job.encode();	
+	var blob = job.encode();
 	this.busy = true;	
 	
 	//	Prepare a packet header
@@ -71,27 +77,34 @@ WorkerTunnel.prototype.onData = function( data ) {
 		return;
 
 	if ( this.readBuffer[0] != 112 )
-		return host.onConnectionError( "There's junk in a worker tunnel" );
+		return this.host.onConnectionError( "There's junk in a worker tunnel" );
 	
-	var length = this.readBuffer.readUInt32BE( 1 );			
+	var length = this.readBuffer.readUInt32BE( 1 );
 
 	if ( this.readBuffer.length >= length + 5 ) {
-		//	We have a complete packet! TODO: This shouldn't discard the whole buffer, just in case there are leftovers.
+		//	We have a complete packet! 
 		var message = Binary.decode( this.readBuffer, 5 );
-		this.readBuffer = null;
-		
-		console.log( message );
+		this.readBuffer = this.readBuffer.chop( length + 5 );
 		
 		if ( message ) {
-			if ( message.hasOwnProperty( 'error' ) && message.hasOwnProperty( 'code' ) )
-				this.currentJob.fail( message.code, message.error );
-			else
-				this.currentJob.done( message );
-		} else
-			this.currentJob.fail( 'error', 'Null response' );
+			//	Find the related job
+			if ( message.i ) {
+				var job = this.sentJobs[ message.i ];
+				if ( job ) {
+				
+					//	Got a message related to a job.
+					job.handleMessage( message );
+					
+				} else {
+					console.log( 'ERROR: Message received with an invalid job id.' );
+				}
+			} else {
+				console.log( 'ERROR: Message received with no job id.' );
+			}
+		} else {
+			console.log( 'ERROR: NULL packet received. Not cool.' );
+		}
 		
-		this.currentJob = null;
-		this.busy = false;
 		this.updateQueue();
 	}	
 }

@@ -11,11 +11,11 @@ Binary.encode = function( data ) {
 		cursor: 0,
 	};
 
+	console.log( data );
+
 	_bin_encode( wb, data );
 	
-	//	This might be slightly mean to buffers.
-	wb.buffer.length = wb.cursor;
-	return wb.buffer;
+	return wb.buffer.slice( 0, wb.cursor );
 }
 
 Binary.decode = function( buffer, offset ) {
@@ -68,6 +68,9 @@ function _bin_decode( wb ) {
 		case 'i':	//	int32
 			return _dec_int32( wb );
 		
+		case 'd':	//	double
+			return _dec_double( wb );
+		
 		case 'c':	//	Character
 			return String.fromCharCode( _dec_uint8( wb ) );
 		
@@ -88,6 +91,12 @@ function _dec_uint8( wb ) {
 function _dec_int32( wb ) {
 	var value = wb.buffer.readInt32BE( wb.cursor );
 	wb.cursor += 4;
+	return value;
+}
+
+function _dec_double( wb ) {
+	var value = wb.buffer.readDoubleBE( wb.cursor );
+	wb.cursor += 8;
 	return value;
 }
 
@@ -140,9 +149,12 @@ function _bin_encode( wb, data ) {
 			if ( data >= 0 && data < 256 ) {
 				_enc_byte( wb, 't' );
 				_enc_uint8( wb, data );
-			} else {
+			} else if ( data > -2147483640 && data < 2147483640) {
 				_enc_byte( wb, 'i' );
 				_enc_int32( wb, data );
+			} else {
+				_enc_byte( wb, 'd' );
+				_enc_double( wb, data );
 			}
 			break;
 		
@@ -188,6 +200,12 @@ function _enc_int32( wb, value ) {
 	wb.cursor += 4;
 }
 
+function _enc_double( wb, value ) {
+	_ensure_buffer( wb, 8 );
+	wb.buffer.writeDoubleBE( value, wb.cursor );
+	wb.cursor += 8;
+}
+
 function _enc_uintx( wb, value ) {
 	if ( value < 255 ) {
 		_enc_uint8( wb, value );
@@ -205,3 +223,26 @@ function _enc_buffer( wb, value ) {
 	value.copy( wb.buffer, wb.cursor );
 	wb.cursor += value.length;
 }
+
+//
+//	Useful buffer extension to dump contents readably.
+//
+
+Buffer.prototype.debugDump = function() {
+	console.log( "Dump - " + this.length + " bytes." );
+	for ( var i = 0; i < this.length; i++ ) {
+		var hex = this[ i ].toString( 16 );
+		process.stdout.write( ( hex.length < 2 ? '0' : '' ) + hex + ' ' );
+		
+		if ( this[ i ] > 32 && this[ i ] < 127 )
+			process.stdout.write( String.fromCharCode( this[ i ] ) + ' ' )
+		else
+			process.stdout.write( '  ' );
+		
+		if ( i % 30 == 29 )
+			process.stdout.write( '\n' );
+	}
+	
+	process.stdout.write( '\n\n' );
+}
+
