@@ -35,7 +35,7 @@ var FileTable = React.createClass( {
 	},
 	
 	load: function() {
-		new JobHandle( {
+		new WorkerJob( {
 			job: 'ls',
 			args: {
 				path: this.props.path,
