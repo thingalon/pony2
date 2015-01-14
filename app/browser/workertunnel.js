@@ -2,7 +2,7 @@
 //	WorkerTunnel; represents one open ssh tunnel to the remote worker, which handles jobs.
 //
 
-var Tools = require( './common/tools.js' );
+var Tools = require( '../common/tools.js' );
 var Binary = require( './binary.js' );
 
 function WorkerTunnel( host ) {

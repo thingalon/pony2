@@ -7,7 +7,7 @@ var crypto = require( 'crypto' );
 var fs = require( 'fs' );
 var ipc = require( 'ipc' );
 
-var Tools = require( './common/tools.js' );
+var Tools = require( '../common/tools.js' );
 var WorkerTunnel = require( './workertunnel.js' );
 
 function Host( user, hostname ) {
@@ -35,8 +35,8 @@ Host.shellPrompt = '****** PONYEDIT 2 PROMPT ******';
 ( function() {
 	var scripts = {
 		binary: 'binary.js',
-		jobs: 'assets/jobs.js',
-		worker: 'assets/worker.js',
+		jobs: '../worker/jobs.js',
+		worker: '../worker/worker.js',
 	};
 
 	Host.workerScripts = {};	

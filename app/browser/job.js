@@ -3,8 +3,8 @@
 //
 
 var Binary = require( './binary.js' );
-var Tools = require( './common/tools.js' );
-var Type = require( './common/type.js' );
+var Tools = require( '../common/tools.js' );
+var Type = require( '../common/type.js' );
 var Host = require( './host.js' );
 
 

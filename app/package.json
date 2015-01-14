@@ -4,7 +4,7 @@
 	"description": "Super fast SSH editor",
 	"author": "thingalon",
 	
-	"main": "main.js",
+	"main": "app.js",
 
 	"dependencies": {
 		"ssh2": "*",

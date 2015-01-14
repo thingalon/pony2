@@ -17,7 +17,7 @@ module.exports = function(grunt) {
 					'style': 'expanded'
 				},
 				'files': {
-					'app/ui/style/main.gen.css': 'app/ui/style/main.scss'
+					'app/client/style/main.gen.css': 'app/client/style/main.scss'
 				}
 			}
 		},
@@ -36,9 +36,9 @@ module.exports = function(grunt) {
 			'dynamic_mappings': {
 				'files': [ {
 					'expand': true,
-					'cwd': 'app/ui/src',
+					'cwd': 'app/client/src',
 					'src': [ '*.jsx' ],
-					'dest': 'app/ui/js',
+					'dest': 'app/client/js',
 					'ext': '.gen.js'
 				} ]
 			}
