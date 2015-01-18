@@ -4,6 +4,122 @@
 
 var Binary = require( './binary.js' );
 var Tools = require( '../common/tools.js' );
+var Host = require( './host.js' );
+var ipc = require( 'ipc' );
+
+var nextRequestId = 1;
+var activeJobs = {};
+
+function BrowserJobRequest( details ) {
+    this.id = nextRequestId++;
+    activeJobs[ this.id ] = this;
+    
+    this.job = details.job;
+    this.args = details.args;
+    this.sender = details.sender;
+    this.state = 'active';
+    
+    //  Ensure job updates happen *after* construction finishes.
+    setTimeout( this._sendToHost.bind( this ), 1 );
+}
+
+//  destroy: removes this job from the active list, allowing it to get GC'd.
+BrowserJobRequest.prototype.destroy = function() {
+	delete activeJobs[ this.id ];
+}
+
+//  _sendToHost; sends this job to the appropriate host.
+BrowserJobRequest.prototype._sendToHost = function() {
+    var host = null;
+    
+    //  Has a host been explicitly provided?
+    if ( this.args.username && this.args.hostname )
+        host = Host.find( this.args.username, this.args.hostname, true );
+    
+    //  Has a path been given?
+    if ( ! host && this.args.path ) {
+        var splitPath = Tools.splitPath( this.args.path );
+        host = Host.find( splitPath.user, splitPath.host, true );
+    }
+    
+    //  If no host found, fail. :(
+    if ( ! host ) {
+        this.fail( 'NO_HOST', 'No host found to handle "' + this.job + '" job.' );
+        return;
+    }
+    
+    //  Send this to the host.
+    host.handleJob( this );
+};
+
+BrowserJobRequest.prototype.done = function( result ) {
+    this.state = 'succeeded';
+    this.result = result;
+	
+	this.pingStatus();
+	this.destroy();
+};
+
+//  fail this job. Sad trombone WOMP WOMP
+BrowserJobRequest.prototype.fail = function( code, message ) {
+    this.state = 'failed';
+    this.errorCode = code;
+    this.errorMessage = message;
+    
+    this.pingStatus();
+	this.destroy();
+};
+
+//  Send a notice to the client layer that this job has changed state.
+BrowserJobRequest.prototype.pingStatus = function() {
+    if ( this.sender ) {
+		this.sender.send( 'BrowserJobRequest.update', {
+            id: this.id,
+            state: this.state,
+            errorCode: this.errorCode,
+            errorMessage: this.errorMessage,
+            result: this.result,
+        } );
+    }
+};
+
+//  Encode a job request for transport.
+BrowserJobRequest.prototype.encode = function() {
+	return Binary.encode( {
+		i: this.id,
+		j: this.job,
+		a: this.args,
+	} );
+}
+
+
+//	Got a message from the remote server; handle it.
+BrowserJobRequest.prototype.handleMessage = function( message ) {
+	//	For now, all messages close jobs. TODO: Make it possible for update messages / partial downloads.
+	if ( message.hasOwnProperty( 'errcode' ) && message.hasOwnProperty( 'errmessage' ) )
+		this.fail( message.errcode, message.errmessage );
+	else
+		this.done( message );
+}
+
+//
+//	BrowserJobRequest IPC stuff; handles create requests from the client layer.
+//
+
+ipc.on( 'BrowserJobRequest.create', function( event, details ) {
+	var job = new BrowserJobRequest( {
+        job: details.job,
+        args: details.args,
+        sender: event.sender
+    } );
+    
+    event.returnValue = job.id;
+} );
+
+
+
+/*var Binary = require( './binary.js' );
+var Tools = require( '../common/tools.js' );
 var Type = require( '../common/type.js' );
 var Host = require( './host.js' );
 var ipc = require( 'ipc' );
@@ -116,15 +232,6 @@ BrowserJobRequest.prototype.maybeSendToHost = function() {
 	return false;
 }
 
-//	Got a message from the remote server; handle it.
-BrowserJobRequest.prototype.handleMessage = function( message ) {
-	//	For now, all messages close jobs. TODO: Make it possible for update messages / partial downloads.
-	if ( message.hasOwnProperty( 'errcode' ) && message.hasOwnProperty( 'errmessage' ) )
-		this.fail( message.errcode, message.errmessage );
-	else
-		this.done( message );
-}
-
 //	Export Job class.
 module.exports = BrowserJobRequest;
 
@@ -178,3 +285,4 @@ ipc.on( 'Job.getStatus', function( event, jobId ) {
 	else
 		event.returnValue = job.status;
 } );
+*/

@@ -11,8 +11,6 @@ Binary.encode = function( data ) {
 		cursor: 0,
 	};
 
-	console.log( data );
-
 	_bin_encode( wb, data );
 	
 	return wb.buffer.slice( 0, wb.cursor );

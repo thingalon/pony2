@@ -40,12 +40,14 @@ var FileTable = React.createClass( {
 			args: {
 				path: this.props.path,
 			},
-			onSuccess: Tools.cb( this, this.lsSuccess ),
-			onFailure: Tools.cb( this, this.lsFailure ),
+			onSuccess: this.lsSuccess,
+			onFailure: this.lsFailure,
 		} );
 	},
 	
 	lsSuccess: function( job, result ) {
+        console.log( result );
+    
 		//	Split the flags string up
 		for ( var i in result.r ) {
 			var entry = result.r[ i ];

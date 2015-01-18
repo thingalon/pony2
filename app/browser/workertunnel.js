@@ -4,6 +4,7 @@
 
 var Tools = require( '../common/tools.js' );
 var Binary = require( './binary.js' );
+var net = require( 'net' );
 
 function WorkerTunnel( host ) {
 	this.host = host;
@@ -14,25 +15,39 @@ function WorkerTunnel( host ) {
 	this.tunnelId = WorkerTunnel.nextTunnelId++;
 	this.nextMessageId = 0;
 	var tunnel = this;
-	
-	host.connection.forwardOut( '127.0.0.1', host.workerSettings.port, '127.0.0.1', host.workerSettings.port, function( error, stream ) {
-		if ( error )
-			return host.onConnectionError( 'Failed to open a worker tunnel:' + error.toString() );
-		
-		tunnel.stream = stream;		
-		
-		stream.on( 'close', function() { host.onConnectionError( 'Worker tunnel caved in unexpectedly' ); } );
-		stream.on( 'data', Tools.cb( tunnel, tunnel.onData ) )
-		stream.on( 'error', function( error ) {
-			console.log( 'error: ' + error.toString() );
-		} );
-		
-		//	Send the client key.
-		stream.write( new Buffer( host.workerSettings.clientKey ) );
-		tunnel.connected = true;
-		
-		tunnel.updateQueue();
-	} );
+    
+    if ( host.isLocal ) {
+        //  Open a local connection.
+        this.stream = new net.Socket();
+        this.stream.on( 'data', this.onData.bind( this ) );
+        this.stream.on( 'close', host.onConnectionError.bind( host, 'Worker tunnel caved in unexpectedly' ) );
+        this.stream.on( 'error', host.onConnectionError.bind( host, 'Worker tunnel hit an error' ) );
+        this.stream.connect( host.workerSettings.port, '127.0.0.1', function() {
+            //	Send the client key.
+            tunnel.stream.write( new Buffer( host.workerSettings.clientKey ) );
+            tunnel.connected = true;
+
+            tunnel.updateQueue();
+        } );
+    } else {
+        //  Open a tunnelled ssh connection.
+        host.connection.forwardOut( '127.0.0.1', host.workerSettings.port, '127.0.0.1', host.workerSettings.port, function( error, stream ) {
+            if ( error )
+                return host.onConnectionError( 'Failed to open a worker tunnel:' + error.toString() );
+
+            tunnel.stream = stream;		
+
+            stream.on( 'close', host.onConnectionError.bind( host, 'Worker tunnel caved in unexpectedly' ) );
+            stream.on( 'data', this.onData.bind( this ) )
+            stream.on( 'error', host.onConnectionError.bind( host, 'Worker tunnel hit an error' ) );
+            
+            //	Send the client key.
+            stream.write( new Buffer( host.workerSettings.clientKey ) );
+            tunnel.connected = true;
+
+            tunnel.updateQueue();
+        } );
+    }
 }
 
 WorkerTunnel.nextTunnelId = 0;

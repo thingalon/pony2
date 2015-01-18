@@ -2,17 +2,20 @@
 //	Host - represents a remote ssh host. Use Host.get to find host objects.
 //
 
+var Tools = require( '../common/tools.js' );
+var WorkerTunnel = require( './workertunnel.js' );
+
 var Connection = require( 'ssh2' );
 var crypto = require( 'crypto' );
 var fs = require( 'fs' );
 var ipc = require( 'ipc' );
-
-var Tools = require( '../common/tools.js' );
-var WorkerTunnel = require( './workertunnel.js' );
+var ChildProcess = require( 'child_process' );
+var path = require( 'path' );
 
 function Host( user, hostname ) {
 	this.user = user;
 	this.hostname = hostname;
+    this.isLocal = ( this.hostname == null );
 
 	this.allJobTunnels = [];	//	all 7 tunnels; non-bound jobs can go to the least busy of all
 	this.boundJobTunnels = [];	//	5 file-bound tunnels; can take regular jobs, or file-specific ones.
@@ -53,7 +56,7 @@ Host.shellPrompt = '****** PONYEDIT 2 PROMPT ******';
 
 //	One-shot for checking remote node, checking the worker script, and starting the worker script if ok.
 Host.initCommand = "stty -echo\nunset HISTFILE\nnode -e \"" +
-	"f=require('fs'),c=require('crypto'),p=process.env['HOME']+'/.pony2/',h=" + JSON.stringify( Host.workerHashes ).replace( /"/g, "'" ) + ",u=[],s=process.stdout,j=JSON.stringify;" +
+	"f=require('fs'),c=require('crypto'),p=process.env.HOME+'/.pony2/',h=" + JSON.stringify( Host.workerHashes ).replace( /"/g, "'" ) + ",u=[],s=process.stdout,j=JSON.stringify;" +
 	"for(n in h){" +
 		"t=p+n+'.js';" +
 		"if(! f.existsSync(t)||c.createHash('md5').update(f.readFileSync(t)).digest('hex')!=h[n])" +
@@ -146,7 +149,6 @@ Host.prototype.findShortestTunnelQueue = function( tunnelList ) {
 Host.prototype.setState = function( state, message ) {
 	this.status = state;
 	this.message = message;
-	
 }
 
 Host.prototype.connect = function() {
@@ -155,16 +157,69 @@ Host.prototype.connect = function() {
 		
 	this.status = Host.state.connecting;
 	
-	this.connection = new Connection();
-	this.connection.on( 'ready', Tools.cb( this, this.onConnectionReady ) );
-	this.connection.on( 'error', Tools.cb( this, this.onConnectionError ) );
+    if ( this.isLocal )
+		this.startLocalWorker();
+    else {
+        //  Connect via SSH.
+        this.connection = new Connection();
+        this.connection.on( 'ready', Tools.cb( this, this.onConnectionReady ) );
+        this.connection.on( 'error', Tools.cb( this, this.onConnectionError ) );
 
-	this.connection.connect( {
-		host: this.hostname,
-		port: 22,
-		username: this.user,
-		agent: process.env.SSH_AUTH_SOCK,
-	} );
+        this.connection.connect( {
+            host: this.hostname,
+            port: 22,
+            username: this.user,
+            agent: process.env.SSH_AUTH_SOCK,
+        } );
+    }
+}
+
+Host.prototype.startLocalWorker = function() {
+    var workerPath = path.join( process.env.HOME, '.pony2' );
+    
+    //  Make sure the ~/.pony2 path exists.
+    try {
+        var pathExists = fs.existsSync( workerPath );
+        if ( ! pathExists ) {
+            fs.mkdirSync( workerPath );
+        }
+    } catch( e ) {
+        this.onConnectionError( 'Failed to create directory at ' + workerPath );
+    }
+    
+    //  Drop the plugin files into the right spot. Don't bother hashing like remote files; just writing a fistful of small files should be really fast anyway.
+    for ( var scriptName in Host.workerScripts ) {
+        var scriptPath = path.join( workerPath, scriptName + '.js' );
+        fs.writeFileSync( scriptPath, Host.workerScripts[ scriptName ] );
+    }
+    
+    //  Prepare a stdout handler to watch for a header...
+    this.stdoutHandler = this.getPromptReader( this.parseWorkerHeader.bind( this ) );
+    
+    //  Launch them in a child process
+    this.childProcess = ChildProcess.spawn( 'node', [ path.join( workerPath, 'worker.js' ) ], {
+        stdio: [ 'ignore', 'pipe', 'pipe' ]
+    } );
+    this.childProcess.stdout.on( 'data', this.onStdOut.bind( this ) );
+    this.childProcess.stderr.on( 'data', this.onStdErr.bind( this ) );
+}
+
+//  Creates a stdout processing callback that reads until the ponyedit prompt is seen, then calls the given callback.
+//  Used while running remote shell commands and looking for the pony header after launching a child proc.
+Host.prototype.getPromptReader = function( callback ) {
+    var resultSent = false;
+    var allData = '';
+    
+    return function( data ) {
+		if ( resultSent )
+			return;	
+        
+		allData += data.toString();
+		if ( allData.indexOf( Host.shellPrompt ) > -1 ) {
+			callback( allData );
+			resultSent = true;
+		}
+	}
 }
 
 Host.prototype.onConnectionReady = function() {
@@ -178,9 +233,9 @@ Host.prototype.onConnectionReady = function() {
 		host.shellStream = stream;
 
 		//	Hook up some callback on shell events
-		stream.on( 'close', Tools.cb( host, host.onShellClose ) );
-		stream.on( 'data', Tools.cb( host, host.onStdOut ) );
-		stream.stderr.on( 'data', Tools.cb( host, host.onStdErr ) );
+		stream.on( 'close', host.onShellClose.bind( host ) );
+		stream.on( 'data', host.onStdOut.bind( host ) );
+		stream.stderr.on( 'data', host.onStdErr.bind( host ) );
 		
 		//	Try to launch the remote worker.
 		host.launchWorker();
@@ -300,17 +355,8 @@ Host.prototype.runShellCommand = function( command, callback ) {
 	var allData = '';
 	var resultSent = false;
 
-	this.stdoutHandler = function( data ) {
-		if ( resultSent )
-			return;	
-	
-		allData += data.toString();
-		if ( allData.indexOf( Host.shellPrompt ) > -1 ) {
-			callback( allData );
-			resultSent = true;
-		}
-	}
-	
+	this.stdoutHandler = this.getPromptReader( callback );
+    
 	setTimeout( function() {
 		if ( resultSent )
 			return;

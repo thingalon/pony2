@@ -3,69 +3,50 @@
 //
 
 var ipc = window.ipc || require( 'ipc' );
+var browserRequests = {};
 
-function ClientJobRequest( args ) {
-	this.args = args;
+function ClientJobRequest( params ) {
+    this.job = params.job;
+    this.args = params.args;
+    this.onSuccess = params.onSuccess;
+    this.onFailure = params.onFailure;
 
-	//	Create the Job on the browser-side.
-	this.status = ipc.sendSync( 'Job.create', { 
-		job: this.args.job, 
-		args: this.args.args,
-	} );
-	
-	ClientJobRequest.handles[ this.status.id ] = this;
-	
-	//	Guarantee that this will return by an instant fail or success state.
-	setTimeout( Tools.cb( this, this.checkState ), 1 );
+    //  Create a browser-side job request.
+    this.id = ipc.sendSync( 'BrowserJobRequest.create', {
+        job: this.job,
+        args: this.args,
+    } );
+    browserRequests[ this.id ] = this;
 }
 
-ClientJobRequest.handles = {};
-
-ClientJobRequest.prototype.getArg = function( name ) {
-	return this.args.args[ name ];
+ClientJobRequest.prototype.handleFailure = function() {
+    console.log( this.job + ' job failed with error: ' + this.errorCode + ' - ' + this.errorMessage );
+    if ( this.onFailure )
+        this.onFailure( this, this.errorCode, this.errorMessage );
+    
+    delete browserRequests[ this.id ];
 }
 
-ClientJobRequest.prototype.checkState = function() {
-	//	Check if the job is done.
-	switch ( this.status.state ) {
-		case 'failed':
-			this.failed();
-			break;
-		
-		case 'done':
-			this.done();
-			break;
-	}
-}
-
-ClientJobRequest.prototype.failed = function() {
-	if ( this.args.onFailure )
-		this.args.onFailure( this, this.status.code, this.status.message );
-	
-	delete ClientJobRequest.handles[ this.status.id ];
-}
-
-ClientJobRequest.prototype.done = function() {
-	if ( this.args.onSuccess )
-		this.args.onSuccess( this, this.status.result );
-
-	delete ClientJobRequest.handles[ this.status.id ];
-}
-
-ClientJobRequest.getById = function( jobId ) {
-	return ClientJobRequest.handles[ jobId ];
+ClientJobRequest.prototype.handleSuccess = function() {
+    if ( this.onSuccess )
+        this.onSuccess( this, this.result );
+    
+    delete browserRequests[ this.id ];
 }
 
 //
-//	ClientJobRequest IPC stuff; handles status updates and finish notifications from the server
+//	ClientJobRequest IPC stuff; handles status updates and finish notifications from the browser layer.
 //
 
-//	Job.update - called when a job gets updated.
-ipc.on( 'Job.update', function( status ) {
-	var jobId = status.id;
-	var job = ClientJobRequest.getById( jobId );
-	if ( job ) {
-		job.status = status;
-		job.checkState();
-	}
+ipc.on( 'BrowserJobRequest.update', function( details ) {
+    var request = browserRequests[ details.id ];
+    if ( request ) {
+        for ( var i in details )
+            request[ i ] = details[ i ];
+        
+        if ( request.state == 'failed' )
+            request.handleFailure();
+        else if ( request.state == 'succeeded' )
+            request.handleSuccess();
+    }
 } );

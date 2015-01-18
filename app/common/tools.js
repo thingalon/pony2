@@ -23,26 +23,33 @@ if ( isNode ) {
 	
 	//	Split a path into its components
 	Tools.splitPath = function( path ) {
-		//	This is an ssh:// path?
-		var sshRegex = new RegExp( '^ssh://(?:([^@]+)@)?([^/]+)(/?.*)$' );
-		var result = sshRegex.exec( path );
-		if ( result ) {
-			var remotePath = result[3];
+        //  Does this look like a remote path? Accept both "ssh://user@server/path" and "user@server:path"
+        var sshRegex = new RegExp( '^(?:ssh:\/\/(?:([^@]+)@)?([^\/]+)(.*)|(?:([^@\/]+)@)?([^:]+):(.*))$' );
+        var result = sshRegex.exec( path );
+        if ( result ) {
+            //  This is a remote path.
+            var remotePath = result[3];
 			if ( ! remotePath.startsWith( '/' ) )
 				remotePath = '/' + remotePath;
 
-			return {
-				type: Type.path.ssh,
-				user: result[1],
-				host: result[2],
-				path: remotePath,
-			};
-		} else {
-			return {
-				type: Type.path.local,
-				path: path,
-			};
-		}
+            return {
+                type: Type.path.ssh,
+                user: result[1],
+                host: result[2],
+                path: remotePath
+            };
+        } else {
+            //  Assume local.
+			if ( ! path.startsWith( '/' ) )
+				path = '/' + path;
+
+            return {
+                type: Type.path.local,
+                user: null,
+                host: null,
+                path: path,
+            };
+        }
 	}
 	
 	//	Returns true of the specified path is remote.

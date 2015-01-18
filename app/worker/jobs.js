@@ -40,7 +40,6 @@ Jobs.ls = function( message, success, failure ) {
 						try {
 							target = fs.readlinkSync( fullPath );
 							stats = fs.statSync( fullPath );
-							console.log( stats );
 						} catch ( e ) {
 							stats = null;
 						}
