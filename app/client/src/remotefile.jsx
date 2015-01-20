@@ -41,8 +41,8 @@ RemoteFile.prototype.open = function() {
 			path: this.path,
 			rfid: this.rfid,
 		},
-		onSuccess: Tools.cb( this, this.openSuccess ),
-		onFailure: Tools.cb( this, this.openFailure ),
+		onSuccess: this.openSuccess.bind( this ),
+		onFailure: this.openFailure.bind( this ),
 	} );
 }
 
@@ -72,7 +72,7 @@ RemoteFile.prototype.contentChanged = function( details ) {
 			rfid: this.rfid,
 			details: details,
 		},
-		onFailure: Tools.cb( this, this.updateFailure ),
+		onFailure: this.updateFailure.bind( this ),
 	} );
 }
 

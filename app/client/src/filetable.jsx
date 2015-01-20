@@ -46,15 +46,19 @@ var FileTable = React.createClass( {
 	},
 	
 	lsSuccess: function( job, result ) {
-        console.log( result );
-    
-		//	Split the flags string up
 		for ( var i in result.r ) {
 			var entry = result.r[ i ];
+            
+            //	Split the flags string up
 			entry.flags = {};
 			for ( var j = 0; j < entry.f.length; j++ )
 				entry.flags[ entry.f.substr( j, 1 ) ] = 1;
-		}
+            
+            //  Try to auto-detect a file type and handler for each.
+            if ( ! entry.flags.d ) {
+                entry.fileType = FileTypeManager.guessFileType( this.props.path + '/' + i );
+            }
+        }
 
 		this.setState( {
 			loaded: true,
@@ -164,21 +168,28 @@ var FileTable = React.createClass( {
 		var isDir = entry.flags.d;
 		var isLink = entry.flags.l;
 		var isBroken = entry.flags.b;
+        var fileType = entry.fileType;
 		
 		var className = ( index % 2 == 0 ? 'first' : 'second' ) + ( this.state.selected[ filename ] ? ' selected' : '' );
 		var icon = ( isDir ? 'fa-folder' : 'fa-file' );
 		var iconColor = ( isDir ? '#f90' : '#fff' );
-
+        
+        if ( fileType ) {
+            icon = FileTypeManager.getTypeIcon( fileType );
+            iconColor = FileTypeManager.getTypeIconColor( fileType );
+        }
+        
 		if ( isLink ) {
 			//	Show symlink info instead of size.
 			var linkIcon = ( isBroken ? 'fa-chain-broken' : 'fa-link' );
 			var linkDescription = ( isBroken ? 'Broken link (' : 'Link (' ) + entry.t + ')';
-			var entryInfo = <td className="info" colSpan="2"><i className={ 'fa ' + linkIcon } /> { linkDescription }</td>;
+			var entryInfo = <td className="info" colSpan="3"><i className={ 'fa ' + linkIcon } /> { linkDescription }</td>;
 		} else {
 			//	Show size and date.
 			var entryInfo = [
+                <td className="info" key="type">{ fileType ? FileTypeManager.getTypeName( fileType ) : '' }</td>,
 				<td className="info" key="size">{ isDir ? '' : Tools.prettySize( entry.s ) }</td>,
-				<td className="info" key="date">{ entry.m > 0 ? new Date( entry.m ).toLocaleString()  : '' }</td>,
+				<td className="info" key="date">{ entry.m > 0 ? new Date( entry.m ).prettyTimestamp()  : '' }</td>,
 			];
 		}
 
@@ -220,6 +231,7 @@ var FileTable = React.createClass( {
 				<table className="files">
 					<tr className="head">
 						<th>Filename</th>
+                        <th className="info">Type</th>
 						<th className="info">Size</th>
 						<th className="info">Last Modified</th>
 					</tr>

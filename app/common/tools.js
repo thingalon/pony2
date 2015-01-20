@@ -9,18 +9,6 @@ if ( isNode ) {
 
 ( function( Tools ) {
 
-	//	Handy helper to ensure callbacks get called with the right 'this'.
-	Tools.cb = function( object, fn, extra ) {
-		return function() {
-			var args = [];
-			if ( extra != null )
-				args.push( extra );
-			Array.prototype.push.apply( args, arguments );
-
-			fn.apply( object, args );
-		}
-	}
-	
 	//	Split a path into its components
 	Tools.splitPath = function( path ) {
         //  Does this look like a remote path? Accept both "ssh://user@server/path" and "user@server:path"
@@ -50,13 +38,13 @@ if ( isNode ) {
                 path: path,
             };
         }
-	}
+	};
 	
 	//	Returns true of the specified path is remote.
 	Tools.isPathRemote = function( path ) {
 		var pieces = Tools.splitPath( path );
 		return pieces.type == Type.path.ssh;
-	}
+	};
 	
 	//	Returns the parent of the specified path (if one exists), otherwise false.
 	Tools.parentPath = function( path ) {
@@ -69,9 +57,12 @@ if ( isNode ) {
 			return false;
 		names.pop();
 		pieces.path = names.join( '/' );
+        
+        if ( pieces.type == Type.path.local )
+            pieces.path = '/' + pieces.path;
 		
 		return Tools.joinPath( pieces );
-	}
+	};
 	
 	//	Come up with a short, pretty description of a path
 	Tools.describePath = function( path ) {
@@ -86,7 +77,7 @@ if ( isNode ) {
 			return name + ' on ' + pieces.host;
 		else
 			return name + ' (local)';
-	}
+	};
 	
 	//	Combines a split path back into a string
 	Tools.joinPath = function( pathPieces ) {
@@ -104,7 +95,7 @@ if ( isNode ) {
 		} else {
 			return pathPieces.path;
 		}
-	}
+	};
 	
 	//	Display a filesize in a human-readable format
 	Tools.prettySize = function( size ) {
@@ -119,8 +110,14 @@ if ( isNode ) {
 			return ( size / 1000000000 ).toFixed( 1 ) + ' GB';
 		else
 			return ( size / 1000000000000 ).toFixed( 1 ) + ' TB';
-	}
-	
+	};
+    
+    Tools.pad = function( number, width, padding ) {
+        padding = padding || '0';
+        number = number + '';
+        return number.length >= width ? number : new Array( width - number.length + 1 ).join( padding ) + number;
+    };
+    
 } ( isNode ? exports : this.Tools = {} ) );
 
 //
@@ -140,6 +137,36 @@ String.prototype.startsWith = function( prefix ) {
 String.prototype.contains = function( substring ) {
     return this.indexOf( substring ) !== -1;
 };
+
+Date.prototype.isToday = function() {
+    var justTheDate = new Date( this ).setHours( 0, 0, 0, 0 );
+    var today = new Date().setHours( 0, 0, 0, 0 );
+    
+    return ( justTheDate == today );
+}
+
+Date.prototype.prettyTimestamp = function() {
+    if ( this.isToday() ) {
+        //  If the date is today, just print the time.
+        var hour = this.getHours();
+        if ( hour > 12 ) {
+            hour -= 12;
+            var suffix = ' PM';
+        } else {
+            var suffix = ' AM';
+        }
+        return hour + ':' + Tools.pad( this.getMinutes(), 2 ) + suffix;
+    } else {
+        //  If the date is not today, output the date.
+        var date = this.getDate() + ' ';
+        date += [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ][ this.getMonth() ];
+        
+        if ( this.getYear() != ( new Date() ).getYear() )
+            date += ' ' + ( this.getYear() + 1900 );
+        
+        return date;
+    }
+}
 
 Object.defineProperty( Object.prototype, 'map', {
 	value: function( f ) {

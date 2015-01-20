@@ -5,8 +5,12 @@
 var FilledIcon = React.createClass( {
 
 	render: function() {
-		var fillClass = 'fa fa-stack-1x ' + this.props.icon;
-		var outlineClass = fillClass + ( this.props.color ? '-o' : '' );
+        var fillIcon = this.props.icon;
+        if ( this.props.icon.startsWith( 'fa-file' ) )
+            fillIcon = 'fa-file';
+    
+		var fillClass = 'fa fa-stack-1x ' + fillIcon;
+		var outlineClass = 'fa fa-stack-1x ' + this.props.icon + ( this.props.color ? '-o' : '' );
 		
 		var decoration = '';
 		if ( this.props.decoration )

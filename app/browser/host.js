@@ -162,8 +162,8 @@ Host.prototype.connect = function() {
     else {
         //  Connect via SSH.
         this.connection = new Connection();
-        this.connection.on( 'ready', Tools.cb( this, this.onConnectionReady ) );
-        this.connection.on( 'error', Tools.cb( this, this.onConnectionError ) );
+        this.connection.on( 'ready', this.onConnectionReady.bind( this ) );
+        this.connection.on( 'error', this.onConnectionError.bind( this ) );
 
         this.connection.connect( {
             host: this.hostname,

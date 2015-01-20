@@ -6,7 +6,7 @@ var FileView = React.createClass( {
 
 	getInitialState: function() {
 		this.file = this.props.file;
-		this.file.onStateChange( Tools.cb( this, this.onStateChange ) );
+		this.file.onStateChange( this.onStateChange.bind( this ) );
 	
 		return {
 			file: this.props.file,

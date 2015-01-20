@@ -332,10 +332,10 @@ div.file-dialog {
 						padding: 5px;
 						font-weight: normal;
 						border: 1px solid #ddd;
-						width: 50%;
+                        width: 40%;
 						
 						&.info {
-							width: 25%;
+							width: 20%;
 						}
 					}
 				}
@@ -357,7 +357,8 @@ div.file-dialog {
 					padding: 2px 5px;
 					white-space: nowrap;
 					overflow: ellipsis;
-					width: 50%;
+					width: 40%;
+                    font-size: 9pt;
 					
 					.fa-stack {
 						height: 1ex;
@@ -366,7 +367,7 @@ div.file-dialog {
 					
 					&.info {
 						color: #aaa;
-						width: 25%;
+						width: 20%;
 					}
 				}
 			}
