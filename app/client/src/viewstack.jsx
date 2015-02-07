@@ -32,13 +32,13 @@ var ViewStack = React.createClass( {
 	render: function() {
 		if ( this.state.currentView ) {
 			return (
-				<FileView file={ this.state.currentView.file } />
+				<FileView file={ this.state.currentView.file } />	//
 			);
 		} else {
 			return (
 				<StatusArea type="blank" icon="fa-question">
 					Nothing open. Hit cmd-o to open something.
-				</StatusArea>
+				</StatusArea>	//
 			);
 		}
 	}

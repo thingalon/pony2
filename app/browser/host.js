@@ -38,6 +38,7 @@ Host.shellPrompt = '****** PONYEDIT 2 PROMPT ******';
 ( function() {
 	var scripts = {
 		binary: 'binary.js',
+        filebuffer: '../worker/filebuffer.js',
 		jobs: '../worker/jobs.js',
 		worker: '../worker/worker.js',
 	};

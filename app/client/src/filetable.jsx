@@ -175,8 +175,8 @@ var FileTable = React.createClass( {
 		var iconColor = ( isDir ? '#f90' : '#fff' );
         
         if ( fileType ) {
-            icon = FileTypeManager.getTypeIcon( fileType );
-            iconColor = FileTypeManager.getTypeIconColor( fileType );
+            icon = FileTypeManager.getFileTypeIcon( fileType );
+            iconColor = FileTypeManager.getFileTypeIconColor( fileType );
         }
         
 		if ( isLink ) {
@@ -187,7 +187,7 @@ var FileTable = React.createClass( {
 		} else {
 			//	Show size and date.
 			var entryInfo = [
-                <td className="info" key="type">{ fileType ? FileTypeManager.getTypeName( fileType ) : '' }</td>,
+                <td className="info" key="type">{ fileType ? FileTypeManager.getFileTypeName( fileType ) : '' }</td>,
 				<td className="info" key="size">{ isDir ? '' : Tools.prettySize( entry.s ) }</td>,
 				<td className="info" key="date">{ entry.m > 0 ? new Date( entry.m ).prettyTimestamp()  : '' }</td>,
 			];

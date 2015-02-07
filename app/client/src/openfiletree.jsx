@@ -10,64 +10,68 @@ var OpenFileTree = React.createClass( {
 		};
 	},
 	
-	createFileTree: function( files ) {
-		var sortedFilenames = Object.keys( files );
-		var hosts = [];
-		var currentHost = null;
-		var currentHostName = '';
-		var currentPath = null;
-		var currentPathName = '';
-		
-		for ( var i = 0; i < sortedFilenames.length; i++ ) {
-			var fullPath = sortedFilenames[ i ];
-			var pathPieces = Tools.splitPath( fullPath );
-			
-			//	Determine hostname, create a new branch if need be.
-			var hostname = pathPieces.host || 'Local Computer';
-			if ( hostname != currentHostName ) {
-				currentHostName = hostname;
-				currentHost = {
-					label: currentHostName,
-					paths: [],
-				};
-				currentPath = null;
-				currentPathName = '';
-				hosts.push( currentHost );
-			}
-			
-			//	Split the path from the filename
-			var lastSlash = pathPieces.path.lastIndexOf( '/' );
-			if ( lastSlash < 1 || lastSlash >= pathPieces.path.length - 1 ) {
-				var filename = pathPieces.path;
-				var path = '/';
-			} else {
-				var filename = pathPieces.path.substr( lastSlash + 1 );
-				var path = pathPieces.path.substr( 0, lastSlash );
-			}
-			
-			//	See if we need a new branch for the path
-			if ( currentPathName != path ) {
-				currentPathName = path;
-				currentPath = {
-					label: path,
-					files: [],
-				};
-				currentHost.paths.push( currentPath );
-			}
-			
-			//	Add to the tree
-			currentPath.files.push( {
-				label: filename,
-				path: fullPath
-			} );
-		}
-		
-		return hosts;
+	createFileTree: function( filesByKey ) {
+		//  Sort files by path.
+        var fileKeys = Object.keys( filesByKey );
+        fileKeys.sort( function( fileKeyA, fileKeyB ) {
+            return filesByKey[ fileKeyA ].path.localeCompare( filesByKey[ fileKeyB ].path );
+        } );
+        
+        var tree = [];
+        var currentHostNode = null;
+        var currentHostName = '';
+        var currentPathNode = null;
+        var currentPathName = '';
+        
+        for ( var i = 0; i < fileKeys; i++ ) {
+            var file = filesByKey[ fileKeys ];
+            var path = file.path;
+            var pathPieces = Tools.splitPath( path );
+            
+            //  Determine hostname, create a new branch if need be.
+            var hostname = pathPieces.host || 'Local Files';
+            if ( hostname != currentHostName ) {
+                currentHostName = hostname;
+                currentHostNode = {
+                    label: currentHostName,
+                    paths: [],
+                };
+                tree.push( currentHostNode );
+            }
+            
+            //  Split out the filename and path
+            var lastSlach = pathPieces.path.lastIndexOf( '/' );
+            if ( lastSlash < 1 || lastSlash >= pathPieces.path.length - 1 ) {
+                var filename = pathPieces.path;
+                var path = '/';
+            } else {
+                var filename = pathPieces.path.substr( lastSlash + 1 );
+                var path = pathPieces.path.substr( 0, lastSlash );
+            }
+            
+            //  See if we need a new branch for the path
+            if ( currentPathName != path ) {
+                currentPathName = path;
+                currentPathNode = {
+                    label: path,
+                    files: [],
+                };
+                currentHost.paths.push( currentPath );
+            }
+            
+            //  Add a leaf to the tree
+            currentPath.files.push( {
+                label: filename,
+                path: fullPath,
+            } );
+        }
+
+        return tree;
 	},
 	
-	updateFiles: function( files ) {
+	updateFiles: function( filesByKey ) {
 		this.setState( {
-			tree: this.createFileTree( files ),
+			tree: this.createFileTree( filesByKey ),
 		} )
 	},
 	

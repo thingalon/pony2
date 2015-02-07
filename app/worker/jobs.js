@@ -1,5 +1,6 @@
 var Jobs = {};
 var fs = require( 'fs' );
+var FileBuffer = require( './filebuffer.js' );
 
 //
 //	ls - fetch a list of files.
@@ -87,6 +88,21 @@ Jobs.ls = function( message, success, failure ) {
 	} );
 };
 
+Jobs.open = function( message, success, failure ) {
+    var path = expandPath( message.a.path );
+    
+    var fb = new FileBuffer( path );
+    fb.open( function onSuccess() {
+        success( message, {
+            content: fb.getContent(),
+            checksum: fb.getChecksum(),
+            dos: fb.isDosEncoded()
+        } );
+    }, function onFailure( errorCode, errorString ) {
+        failure( message, errorCode, errorString );
+    } );
+};
+
 module.exports = Jobs;
 
 function expandPath( path ) {
@@ -101,19 +117,6 @@ function expandPath( path ) {
 
 
 /*
-sub job_open {
-	my ( $args ) = @_;
-	my $path = expand_path( $args->{'path'} );
-	
-	print $path . "\n";	
-	
-	my $buffer = Buffer->new();
-	my $error = $buffer->open_file( $path );
-	return $error if ( ref( $error ) );
-	
-	return { 'content' => $buffer->get_encoded(), 'dos' => $buffer->{'dos'}, 'checksum' => $buffer->get_checksum() };
-}
-
 sub job_update {
 	my ( $args ) = @_;
 	my $buffer = Buffer->get( $args->{'rfid'} );

@@ -28,27 +28,42 @@ var App = {
 	showOpenDialog: function() {
 		React.render(
 			<div className="overlay">
-				<FileDialog onAccept={ this.openFiles } />
+				<FileDialog onAccept={ this.onOpenDialogResult } />
 			</div>,
 			document.getElementById( 'overlay-layer' )	
 		);
 	},
 	
-	openFiles: function( filenames ) {
+	onOpenDialogResult: function( filenames ) {
 		React.unmountComponentAtNode( document.getElementById( 'overlay-layer' ) );
 	
 		for ( var i = 0; i < filenames.length; i++ )
 			App.openFile( filenames[ i ] );
 	},
 	
-	openFile: function( filename ) {
-		if ( ! this.files[ filename ] ) {
-			this.files[ filename ] = new RemoteFile( filename );
-			this.files[ filename ].open();
-			this.openFileTree.updateFiles( this.files );
-		}
-		
-		this.viewStack.showFile( this.files[ filename ] );
+	openFile: function( filename, viewType ) {
+        //  If no viewType has been specificed, guess one.
+        if ( ! viewType ) {
+            //  TODO.
+        }
+        
+        //  If no viewType has been found, fall back to 'code' by default.
+        viewType = viewType || 'code';
+        
+        //  Determine the type of filehandle to use based on the view
+        var fileHandler = FileTypeManager.getHandlerForView( viewType );
+        
+        //  Open a filehandle (if not already open)
+        var fileKey = fileHandler + '' + filename;
+        if ( ! this.files[ fileKey ] ) {
+            var klass = FileTypeManager.getHandlerClass( fileHandler );
+            this.files[ fileKey ] = new klass( filename );
+            this.files[ fileKey ].open();
+            this.openFileTree.updateFiles( this.files );
+        }
+         
+        //  Open a view (if not already open)
+        this.viewStack.showFile( this.files[ fileKey ], viewType );
 	}
 	
 };

@@ -5,34 +5,31 @@ var CodeEditor = React.createClass( {
 } );
 
 document.addEventListener( 'DOMContentLoaded', function() {
-    FileTypeManager.registerFileHandler( {
-        id: 'code_editor',
-        name: 'Code Editor',
+    FileTypeManager.registerViewType( 'code', {
+        name: 'Code',
         icon: 'fa-file-code',
-        component: CodeEditor,
+        handler: 'text',
+        component: CodeEditor
     } );
     
-    FileTypeManager.registerFileType( {
-        id: 'js',
-        name: 'JavaScript File',
-        handler: 'code_editor',
+    FileTypeManager.registerFileType( 'javascript', {
+        name: 'JavaScript',
+        view: 'code',
         patterns: [ '\.jsx?$' ],
         iconColor: '#fff185',
     } );
-
-    FileTypeManager.registerFileType( {
-        id: 'html',
-        name: 'HTML File',
-        handler: 'code_editor',
+    
+    FileTypeManager.registerFileType( 'html', {
+        name: 'HTML',
+        view: 'code',
         patterns: [ '\.html$' ],
         iconColor: '#ff9875',
     } );
     
-    FileTypeManager.registerFileType( {
-        id: 'css',
-        name: 'CSS File',
-        handler: 'code_editor',
-        patterns: [ '\.css$' ],
+    FileTypeManager.registerFileType( 'css', {
+        name: 'CSS',
+        view: 'code',
+        patterns: [ '\.css?$' ],
         iconColor: '#70d4ff',
     } );
 } );

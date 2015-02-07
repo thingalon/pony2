@@ -1,94 +1,76 @@
 //  FileTypeManager - manages known filetypes and how to handle them.
 ( function( FileTypeManager ) {
 
-    var handlers = {};
+    var fileHandlers = {};
+    var viewTypes = {};
     var fileTypes = {};
-    var filePatterns = [];
-    
-    FileTypeManager.registerFileHandler = function( details ) {
-        if ( ! details.id || ! details.name || ! details.component || handlers[ details.id ] )
-            return false;
-        
-        handlers[ details.id ] = details;
-        return true;
+    var typePatterns = [];
+
+    FileTypeManager.registerFileHandler = function( id, klass ) {
+        fileHandlers[ id ] = klass;
     };
     
-    FileTypeManager.registerFileType = function( details ) {
-        if ( ! details.id || ! details.name || ! details.handler || ! details.patterns )
-            return false;
-        
-        if ( ! handlers[ details.handler ] )
-            return false;
-        
-        fileTypes[ details.id ] = details;
-        
+    FileTypeManager.registerViewType = function( id, details ) {
+        viewTypes[ id ] = details;
+    };
+    
+    FileTypeManager.registerFileType = function( id, details ) {
+        fileTypes[ id ] = details;
+    
         for ( var i = 0; i < details.patterns.length; i++ ) {
-            filePatterns.push( {
-                regexp: new RegExp( details.patterns[ i ] ),
-                fileType: details.id,
+            typePatterns.push( {
+                pattern: new RegExp( details.patterns[ i ] ),
+                type: id,
             } );
         }
-        
-        return true;
     };
     
-    FileTypeManager.getFileHandlers = function() {
+    FileTypeManager.getHandlerClass = function( handlerId ) {
+        return fileHandlers[ handlerId ];
     };
     
-    FileTypeManager.guessFileType = function( filename ) {
-        for ( var i in filePatterns ) {
-            var pattern = filePatterns[ i ];
-            if ( pattern.regexp.test( filename ) )
-                return pattern.fileType;
-        }
+    FileTypeManager.getHandlerForView = function( viewId ) {
+        var viewType = viewTypes[ viewId ];
+        if ( viewType && viewType.handler )
+            return viewType.handler;
         
         return null;
     };
     
-    FileTypeManager.getFileType = function( typeId ) {
-        return fileTypes[ typeId ];
+    FileTypeManager.guessFileType = function( filename ) {
+        for ( var i = 0; i < typePatterns.length; i++ ) {
+            if ( typePatterns[ i ].pattern.test( filename ) ) {
+                return typePatterns[ i ].type;
+            }
+        }
     };
     
-    FileTypeManager.getTypeIcon = function( typeId ) {
+    FileTypeManager._getFileTypeProperty = function( typeId, property, defaultValue ) {
         var fileType = fileTypes[ typeId ];
         if ( fileType ) {
-            if ( fileType.icon )
-                return fileType.icon;
+            if ( fileType[ property ] )
+                return fileType[ property ];
             
-            var handler = handlers[ fileType.handler ];
-            if ( handler && handler.icon )
-                return handler.icon;
+            if ( fileType.view ) {
+                var viewType = viewTypes[ fileType.view ];
+                if ( viewType && viewType[ property ] )
+                    return viewType[ property ];
+            }
         }
         
-        return 'fa-file';
+        return defaultValue;
     };
     
-    FileTypeManager.getTypeIconColor = function( typeId ) {
-        var fileType = fileTypes[ typeId ];
-        if ( fileType ) {
-            if ( fileType.iconColor )
-                return fileType.iconColor;
-            
-            var handler = handlers[ fileType.handler ];
-            if ( handler && handler.iconColor )
-                return handler.iconColor;
-        }
-        
-        return '#fff';
+    FileTypeManager.getFileTypeIcon = function( typeId ) {
+        return this._getFileTypeProperty( typeId, 'icon', 'fa-file' );
     };
     
-    FileTypeManager.getTypeName = function( typeId ) {
-        var fileType = fileTypes[ typeId ];
-        if ( fileType ) {
-            if ( fileType.name )
-                return fileType.name;
-            
-            var handler = handlers[ fileType.handler ];
-            if ( handler && handler.name )
-                return handler.name;
-        }
-        
-        return 'File';
-    }
+    FileTypeManager.getFileTypeIconColor = function( typeId ) {
+        return this._getFileTypeProperty( typeId, 'iconColor', '#fff' );
+    };
+    
+    FileTypeManager.getFileTypeName = function( typeId ) {
+        return this._getFileTypeProperty( typeId, 'name', 'File' );
+    };
 
 } )( window.FileTypeManager = window.FileTypeManager || {} );

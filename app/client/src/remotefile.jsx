@@ -1,5 +1,5 @@
 //
-//	RemoteFile - a single remote file, open for edit-streaming.
+//	 - a single remote file, open for edit-streaming.
 //
 
 function RemoteFile( path ) {
@@ -89,3 +89,5 @@ RemoteFile.prototype.save = function( checksum ) {
 	} );
 }
 
+//  Register me as a filehandle!
+FileTypeManager.registerFileHandle( 'text', RemoteFile );

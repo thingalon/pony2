@@ -6,7 +6,7 @@ var FileView = React.createClass( {
 
 	getInitialState: function() {
 		this.file = this.props.file;
-		this.file.onStateChange( this.onStateChange.bind( this ) );
+		this.file.onStateChange( this.onStateChange );
 	
 		return {
 			file: this.props.file,
@@ -22,26 +22,26 @@ var FileView = React.createClass( {
 
 	render: function() {
 		switch ( this.state.fileState ) {
-			case RemoteFile.State.closed:
+			case TextFile.State.closed:
 				return (
 					<StatusArea type="error" icon="fa-warning">
 						File closed.
 					</StatusArea>
 				);
 			
-			case RemoteFile.State.opening:
+			case TextFile.State.opening:
 				return (
 					<StatusArea type="loading" icon="fa-cloud-download">
 						Loading...
 					</StatusArea>
 				);
 			
-			case RemoteFile.State.open:
+			case TextFile.State.open:
 				return (
 					<Editor file={ this.file } key={ this.file.path }/>
 				);
 			
-			case RemoteFile.State.error:
+			case TextFile.State.error:
 				return (
 					<StatusArea type="error" icon="fa-warning">
 						Error: { this.file.errorMessage }
