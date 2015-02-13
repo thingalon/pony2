@@ -6,6 +6,13 @@ function TextFile( path ) {
 	this.path = path;
 	this.state = TextFile.State.closed;
 	this.rfid = TextFile.nextRfid++;
+    
+    //  Guess the syntax of this file. 
+    var aceMode = ace.modelist.getModeForPath( this.path );
+    this.syntax = {
+        name: aceMode.caption,
+        mode: aceMode.mode,
+    };
 }
 
 TextFile.nextRfid = 1;	//	Remote File ID. Used to bind jobs for this file to one worker tunnel.

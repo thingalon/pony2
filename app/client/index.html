@@ -6,6 +6,7 @@
 		<!-- 3rd party things -->
 		<link rel="stylesheet" type="text/css" href="vendor/font-awesome/css/font-awesome.css">
 		<script src="vendor/ace/src-noconflict/ace.js"></script>
+        <script src="vendor/ace/src-noconflict/ext-modelist.js"></script>
 		<script src="vendor/react/react-with-addons.js"></script>
 		
 		<!-- Pony things -->
@@ -51,6 +52,7 @@
 	</body>
 	
 	<script>
+		ace.require( ["ace/ext/modelist"], function( modelist ) { ace.modelist = modelist; } );
 		App.initialize();
 	</script>
 </html>
