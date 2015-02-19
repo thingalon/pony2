@@ -10,21 +10,16 @@ var OpenFileTree = React.createClass( {
 		};
 	},
 	
-	createFileTree: function( filesByKey ) {
-		//  Sort files by path.
-        var fileKeys = Object.keys( filesByKey );
-        fileKeys.sort( function( fileKeyA, fileKeyB ) {
-            return filesByKey[ fileKeyA ].path.localeCompare( filesByKey[ fileKeyB ].path );
-        } );
-        
+	createFileTree: function( files ) {
+        var filenames = Object.keys( files ).sort();
         var tree = [];
         var currentHostNode = null;
         var currentHostName = '';
         var currentPathNode = null;
         var currentPathName = '';
         
-        for ( var i = 0; i < fileKeys; i++ ) {
-            var file = filesByKey[ fileKeys ];
+        for ( var i = 0; i < filenames; i++ ) {
+            var file = files[ filename ];
             var path = file.path;
             var pathPieces = Tools.splitPath( path );
             
@@ -69,9 +64,9 @@ var OpenFileTree = React.createClass( {
         return tree;
 	},
 	
-	updateFiles: function( filesByKey ) {
+	updateFiles: function( files ) {
 		this.setState( {
-			tree: this.createFileTree( filesByKey ),
+			tree: this.createFileTree( files ),
 		} )
 	},
 	

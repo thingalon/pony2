@@ -1,40 +1,28 @@
 //  FileTypeManager - manages known filetypes and how to handle them.
 ( function( FileTypeManager ) {
 
-    var fileHandlers = {};
     var viewTypes = {};
     var fileTypes = {};
     var typePatterns = [];
 
-    FileTypeManager.registerFileHandler = function( id, klass ) {
-        fileHandlers[ id ] = klass;
-    };
-    
     FileTypeManager.registerViewType = function( id, details ) {
         viewTypes[ id ] = details;
     };
     
     FileTypeManager.registerFileType = function( id, details ) {
         fileTypes[ id ] = details;
-    
-        for ( var i = 0; i < details.patterns.length; i++ ) {
-            typePatterns.push( {
-                pattern: new RegExp( details.patterns[ i ] ),
-                type: id,
-            } );
-        }
     };
     
     FileTypeManager.getHandlerClass = function( handlerId ) {
         return fileHandlers[ handlerId ];
     };
     
-    FileTypeManager.getHandlerForView = function( viewId ) {
-        var viewType = viewTypes[ viewId ];
-        if ( viewType && viewType.handler )
-            return viewType.handler;
+    FileTypeManager.getComponentClassForViewType = function( viewTypeId ) {
+        var viewType = viewTypes[ viewTypeId ];
+        if ( ! viewType )
+            return null;
         
-        return null;
+        return viewType.componentClass;
     };
     
     FileTypeManager.guessFileType = function( filename ) {
