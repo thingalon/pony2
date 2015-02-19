@@ -51,9 +51,11 @@ var ViewStack = React.createClass( {
                 var viewKey = this.state.views[ filename ][ viewType ];
                 
                 var componentClass = FileTypeManager.getComponentClassForViewType( viewType );
-                var cssClass = ( this.state.currentView == viewKey ? 'visible' : 'invisible' );
+                var cssClass = ( this.state.currentView == viewKey ? 'view visible' : 'view invisible' );
                 
-                views.push( React.createElement( componentClass, { className: cssClass, key: viewKey, filename: filename } ) );
+                views.push( <div className={ cssClass } >
+                    { React.createElement( componentClass, { className: cssClass, key: viewKey, filename: filename } ) }
+                </div> );
             }
         }
         
@@ -64,7 +66,7 @@ var ViewStack = React.createClass( {
 				</StatusArea>
 			);
         } else {
-            return <div> { views } </div>;
+            return <div className="view-stack"> { views } </div>;
         }
 	}
 	

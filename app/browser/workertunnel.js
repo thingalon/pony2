@@ -38,7 +38,7 @@ function WorkerTunnel( host ) {
             tunnel.stream = stream;		
 
             stream.on( 'close', host.onConnectionError.bind( host, 'Worker tunnel caved in unexpectedly' ) );
-            stream.on( 'data', this.onData.bind( this ) )
+            stream.on( 'data', tunnel.onData.bind( tunnel ) )
             stream.on( 'error', host.onConnectionError.bind( host, 'Worker tunnel hit an error' ) );
             
             //	Send the client key.

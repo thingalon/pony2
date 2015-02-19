@@ -12,11 +12,13 @@ if ( isNode ) {
 	//	Split a path into its components
 	Tools.splitPath = function( path ) {
         //  Does this look like a remote path? Accept both "ssh://user@server/path" and "user@server:path"
-        var sshRegex = new RegExp( '^(?:ssh:\/\/(?:([^@]+)@)?([^\/]+)(.*)|(?:([^@\/]+)@)?([^:]+):(.*))$' );
+        var sshRegex = new RegExp( '^(?:ssh:\/\/(?:(?:[^@]+)@)?(?:[^\/]+)(?:.*)|(?:([^@\/]+)@)?([^:]+):(.*))$' );
         var result = sshRegex.exec( path );
         if ( result ) {
             //  This is a remote path.
             var remotePath = result[3];
+            console.log( remotePath );
+            console.log( JSON.stringify( result ) );
 			if ( ! remotePath.startsWith( '/' ) )
 				remotePath = '/' + remotePath;
 

@@ -4,6 +4,7 @@
 
 var Binary = require( './binary.js' );
 var Tools = require( '../common/tools.js' );
+var Type = require( '../common/type.js' );
 var Host = require( './host.js' );
 var ipc = require( 'ipc' );
 
@@ -40,6 +41,7 @@ BrowserJobRequest.prototype._sendToHost = function() {
     if ( ! host && this.args.path ) {
         var splitPath = Tools.splitPath( this.args.path );
         host = Host.find( splitPath.user, splitPath.host, true );
+        this.args.path = splitPath.path;
     }
     
     //  If no host found, fail. :(

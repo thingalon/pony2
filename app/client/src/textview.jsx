@@ -35,7 +35,7 @@ var TextView = React.createClass( {
                 </StatusArea>;
                 
             case TextConduit.State.open:
-                return <AceEditor name={ this.state.id } conduit={ this.conduit } theme="twilight" />;
+                return <AceEditor name={ this.state.id } conduit={ this.conduit } theme="twilight" />
                 
             case TextConduit.State.error:
                 return <StatusArea type="error" icon="fa-file">

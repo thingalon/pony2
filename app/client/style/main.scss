@@ -83,14 +83,24 @@ ul.left-bar {
 }
 
 //	Views
-div.view-wrap {
+div.view-stack {
+    position: absolute;
+    top: 0;
+    left: 0;
 	width: 100%;
 	height: 100%;
 
-	div.view-loader {
-		top: 50%;
-		left: 50%;
+	div.view {
 		position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        
+        &.visible {
+            display: block;
+        }
 	}
 }
 

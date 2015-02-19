@@ -210,8 +210,8 @@ function _enc_uintx( wb, value ) {
 	} else {
 		_enc_uint8( wb, 255 );
 
-		_ensure_buffer( wb, 4 );
-		wb.buffer.writeUint32BE( value, wb.cursor );
+        _ensure_buffer( wb, 4 );
+		wb.buffer.writeUInt32BE( value, wb.cursor );
 		wb.cursor += 4;
 	}
 }
