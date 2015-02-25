@@ -44,12 +44,12 @@ FileBuffer.prototype.modify = function( details ) {
 
     if ( details.t )
         this.content = this.content.substr( 0, details.p ) + details.t + this.content.substr( details.p );
+
+    process.stdout.writeLine( "***" );
+    console.log( this.content );
 };
 
 FileBuffer.prototype.save = function( checksum, success, failure ) {
-    console.log( checksum );
-    console.log( this.getChecksum() );
-    
     if ( this.getChecksum() != checksum )
         return failure( 'CHECKSUM_MISMATCH', 'The remote FileBuffer has a different checksum :(' );
     
