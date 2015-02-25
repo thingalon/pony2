@@ -193,6 +193,8 @@ TextConduit.prototype.pushChanges = function() {
 }
 
 TextConduit.prototype.save = function() {
+    this.pushChanges();
+    
     new ClientJobRequest( {
 		job: 'save',
 		args: {

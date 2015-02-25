@@ -44,9 +44,6 @@ FileBuffer.prototype.modify = function( details ) {
 
     if ( details.t )
         this.content = this.content.substr( 0, details.p ) + details.t + this.content.substr( details.p );
-
-    process.stdout.writeLine( "***" );
-    console.log( this.content );
 };
 
 FileBuffer.prototype.save = function( checksum, success, failure ) {
