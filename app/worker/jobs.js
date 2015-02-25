@@ -113,6 +113,18 @@ Jobs.m = function( message, success, failure ) {
     return success( message, {} );
 };
 
+Jobs.save = function( message, success, failure ) {
+    var fb = FileBuffer.getByRfid( message.a.r );
+    if ( ! fb )
+        return failure( message, 'internal_error', 'Unrecognized rfid: ' + message.a.r );
+    
+    fb.save( message.a.c, function onSuccess() {
+        success( message, {} );
+    }, function onFailure( errorCode, errorString ) { 
+        failure( message, errorCode, errorString );
+    } );
+};
+
 module.exports = Jobs;
 
 function expandPath( path ) {
@@ -124,170 +136,3 @@ function expandPath( path ) {
 	
 	return path;
 }
-
-
-/*
-sub job_update {
-	my ( $args ) = @_;
-	my $buffer = Buffer->get( $args->{'rfid'} );
-	return { 'error' => 'Buffer not found', 'code' => 'critical' } if ( ! $buffer );
-	
-	return $buffer->update( $args->{'details'}->{'data'} );
-}
-
-sub job_save {
-	my ( $args ) = @_;
-	my $buffer = Buffer->get( $args->{'rfid'} );
-	return { 'error' => 'Buffer not found', 'code' => 'critical' } if ( ! $buffer );
-
-	my $checksum = $args->{'c'};	
-	return $buffer->save( $checksum );
-}
-
-#
-#	Buffer class
-#
-
-{ package Buffer;
-	use Encode qw(encode decode);
-	use Digest::MD5 qw(md5_hex);
-
-	sub new {
-		my ( $fid ) = @_;
-		
-		my $self = { 'fid' => $fid };
-		bless $self;
-		
-		$buffers{ $fid } = $self;
-		return $self;
-	}
-	
-	sub get {
-		my ( $fid ) = @_;
-		return $buffers{ $fid };
-	}
-	
-	sub fid {
-		my ( $self ) = @_;
-		return $self->{'id'};
-	}
-
-	sub open_file {
-		my ( $self, $filename ) = @_;
-		$self->{'filename'} = $filename;
-		
-		# Open the file
-		if ( ! open( F, '<', $filename ) ) {
-			return { 'error' => 'File not found', 'code' => 'not_found' } if ( ! -e $filename );
-			return { 'error' => 'Permission denied', 'code' => 'permission' };
-		}
-
-		# Read it as bytes
-		my $raw_content;		
-		do {
-			local $/;
-			$raw_content = <F>;
-		};
-		close F;
-		
-		# Make sure it's utf-8, or throw an error.
-		my $content = eval {
-			decode( 'utf8', $raw_content, Encode::FB_CROAK );
-		} or return { 'error' => 'File is not UTF-8', 'code' => 'invalid_format' };
-		
-		# Detect DOS line endings, they'll get stripped.
-		$self->{'dos'} = ( $content =~ /\r\n/ );
-
-		# Split the file up into lines.
-		my @lines = split( /\r?\n/m, $content );
-		$self->{'content'} = \@lines;
-		
-		$self->updated();
-		return undef;
-	}
-	
-	sub update {
-		my ( $self, $details ) = @_;
-		my $action = $details->{'action'};
-		my $start = $details->{'range'}->{'start'};
-		my $end = $details->{'range'}->{'end'};
-		
-		# Ensure start always comes before end for simplicity.
-		if ( $end->{'row'} < $start->{'row'} || ( $end->{'row'} == $start->{'row'} && $end->{'column'} < $start->{'column'} ) ) {
-			( $start, $end ) = ( $end, $start );
-		}
-		
-		my $cursor_row = $start->{'row'};
-		my $cursor_col = $start->{'column'};
-		
-		if ( 'insertText' eq $action ) {
-			my @insert_lines = split( "\n", $details->{'text'}, -1 );
-			my $first_line = shift( @insert_lines );
-
-			if ( scalar( @insert_lines ) == 0 ) {
-				# Quick insert in one line.
-				substr( $self->{'content'}->[ $cursor_row ], $cursor_col, 0 ) = $first_line;
-			} else {
-				# Multi-line insert.
-				$insert_lines[ -1 ] .= substr( $self->{'content'}->[ $cursor_row ], $cursor_col );
-				$self->{'content'}->[ $cursor_row ] = substr( $self->{'content'}->[ $cursor_row ], 0, $cursor_col ) . $first_line;
-				splice @{ $self->{'content'} }, $cursor_row + 1, 0, @insert_lines;
-			}
-		} elsif ( 'removeText' eq $action ) {
-			my $row_count = $end->{'row'} - $start->{'row'} + 1;
-			
-			if ( $row_count == 1 ) {
-				# Remove within one line
-				my $length = $end->{'column'} - $start->{'column'};
-				substr( $self->{'content'}->[ $cursor_row ], $start->{'column'}, $length ) = '';
-			} elsif ( $row_count == 2 ) {
-				# Multi-line removal
-				substr( $self->{'content'}->[ $start->{'row'} ], $start->{'column'} ) = substr( $self->{'content'}->[ $end->{'row'} ], $end->{'cplumn'} );
-				splice @{ $self->{'content'} }, $cursor_row + 1, $row_count - 1;
-			} else {
-				return { 'error' => "removeText called across ${row_count} lines. Not supported.", 'code' => 'not_implemented' };
-			}
-		} elsif ( 'removeLines' eq $action ) {
-			my $row_count = $end->{'row'} - $start->{'row'};
-			splice @{ $self->{'content'} }, $cursor_row, $row_count;
-		} else {
-			return { 'error' => "Unknown update action: ${action}.", 'code' => 'not_implemented' };
-		}
-		
-		$self->updated();
-		return {};
-	}
-	
-	sub save {
-		my ( $self, $expected_checksum ) = @_;
-
-		my $checksum = $self->get_checksum();
-		return { 'error' => 'Checksum mismatch! :(', 'code' => 'checksum' } if ( $checksum ne $checksum );
-
-		open( OUTFILE, '>', $self->{'filename'} ) or return { 'error' => 'Failed to open file for writing!', 'code' => 'permission' };
-		print OUTFILE $self->get_encoded();
-		close OUTFILE;
-		
-		return {};
-	}
-	
-	sub updated {
-		my ( $self ) = @_;
-		delete $self->{'checksum'};
-		delete $self->{'encoded'};
-	}
-
-	sub get_encoded {
-		my ( $self ) = @_;
-		$self->{'encoded'} = encode( 'utf8', join( "\n", @{$self->{'content'}} ) ) unless ( defined( $self->{'encoded'} ) );
-		return $self->{'encoded'};
-	}
-	
-	sub get_checksum {
-		my ( $self ) = @_;
-		$self->{'checksum'} = md5_hex( $self->get_encoded() ) unless ( defined( $self->{'checksum'} ) );
-		return $self->{'checksum'};
-	}
-}
-
-*/

@@ -22,6 +22,10 @@ var TextView = React.createClass( {
         } );
     },
 
+    save: function() {
+        this.conduit.save();
+    },
+
     render: function() {
         switch ( this.state.conduitState ) {
             case TextConduit.State.closed:

@@ -36,12 +36,7 @@ var mainMenuTemplate = [
 				label: 'Save',
 				accelerator: 'Command+S',
 				click: function() {
-					if ( ! window.file ) {
-						alert( "Open something first." );
-						return;
-					}
-					
-					window.file.save( window.editor.getChecksum() );
+                    App.save();
 				},
 			},
 			{ label: 'Do other stuff' },

@@ -44,6 +44,10 @@ var ViewStack = React.createClass( {
         } );
     },
     
+    getCurrentView: function() {
+        return this.refs[ this.state.currentView ];
+    },
+    
 	render: function() {
         var views = [];
         for ( var filename in this.state.views ) {
@@ -54,7 +58,12 @@ var ViewStack = React.createClass( {
                 var cssClass = ( this.state.currentView == viewKey ? 'view visible' : 'view invisible' );
                 
                 views.push( <div className={ cssClass } >
-                    { React.createElement( componentClass, { className: cssClass, key: viewKey, filename: filename } ) }
+                    { React.createElement( componentClass, {
+                        key: viewKey,
+                        ref: viewKey,
+                        className: cssClass,
+                        filename: filename
+                    } ) }
                 </div> );
             }
         }

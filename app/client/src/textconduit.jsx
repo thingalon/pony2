@@ -192,15 +192,18 @@ TextConduit.prototype.pushChanges = function() {
     this.changeBuffer = [];
 }
 
-TextConduit.prototype.save = function( checksum ) {
-	new JobHandle( {
+TextConduit.prototype.save = function() {
+    new ClientJobRequest( {
 		job: 'save',
 		args: {
 			r: this.rfid,
-			c: checksum,
+			c: CryptoJS.MD5( this.document.getValue() ).toString( CryptoJS.enc.Hex ),
 		},
 		onSuccess: function() {
 			console.log( 'Saved!' );
 		},
+        onFailure: function( job, code, message ) {
+            console.log( 'Failed to save! :(' );
+        }
 	} );
 };

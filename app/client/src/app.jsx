@@ -80,5 +80,12 @@ That should be up to the individual view to determine.
     
     App.getFileByName = function( filename ) {
         return files[ filename ];
-    };	
+    };
+    
+    App.save = function() {
+        var currentView = App.viewStack.getCurrentView();
+        if ( currentView && currentView.save )
+            currentView.save();
+    };
+
 } )( window.App = window.App || {} );
