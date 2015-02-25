@@ -111,19 +111,20 @@ Host.prototype.updateQueue = function() {
 		var job = this.jobQueue.shift();
 		
 		//	Is this job bound to an rfid? Does that rfid already have a tunnel?
-		var bindableJob = job.args.rfid;
-		if ( bindableJob && this.tunnelBindings[ job.args.rfid ] )
-			return this.tunnelBindings[ job.args.rfid ].takeJob( job );
+		var rfid = job.args.r;
+        console.log( rfid );
+		if ( rfid && this.tunnelBindings[ rfid ] )
+			return this.tunnelBindings[ rfid ].takeJob( job );
 		
 		//	Find the tunnel with the shortest queue among the ones this job is allowed to take
-		var tunnelList = bindableJob ? this.boundJobTunnels : this.allJobTunnels;
+		var tunnelList = rfid ? this.boundJobTunnels : this.allJobTunnels;
 		var tunnel = this.findShortestTunnelQueue( tunnelList );
 		tunnel.takeJob( job );
 		
 		//	If this is a bindable job that is not yet bound to a tunnel, bind it now.
-		if ( bindableJob ) {
-			this.tunnelBindings[ job.args.rfid ] = tunnel;
-			Host.byRfid[ job.args.rfid ] = this;
+		if ( rfid ) {
+			this.tunnelBindings[ rfid ] = tunnel;
+			Host.byRfid[ rfid ] = this;
 		}
 	}
 }

@@ -91,7 +91,7 @@ Jobs.ls = function( message, success, failure ) {
 Jobs.open = function( message, success, failure ) {
     var path = expandPath( message.a.path );
     
-    var fb = new FileBuffer( path );
+    var fb = new FileBuffer( message.a.r, path );
     fb.open( function onSuccess() {
         success( message, {
             content: fb.getContent(),
@@ -101,6 +101,16 @@ Jobs.open = function( message, success, failure ) {
     }, function onFailure( errorCode, errorString ) {
         failure( message, errorCode, errorString );
     } );
+};
+
+//  Modify. Job name shortened to 'm' to keep messages as tight as possible while streaming.
+Jobs.m = function( message, success, failure ) {
+    var fb = FileBuffer.getByRfid( message.a.r );
+    if ( ! fb )
+        return failure( message, 'internal_error', 'Unrecognized rfid: ' + message.a.r );
+    
+    fb.modify( message.a );
+    return success( message, {} );
 };
 
 module.exports = Jobs;

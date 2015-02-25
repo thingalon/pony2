@@ -44,6 +44,11 @@ BrowserJobRequest.prototype._sendToHost = function() {
         this.args.path = splitPath.path;
     }
     
+    //  Has an rfid been provided? 
+    var rfid = this.args.rfid || this.args.r;
+    if ( rfid && ! host )
+        host = Host.findByRfid( rfid );
+    
     //  If no host found, fail. :(
     if ( ! host ) {
         this.fail( 'NO_HOST', 'No host found to handle "' + this.job + '" job.' );
