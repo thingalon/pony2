@@ -1,7 +1,6 @@
 //
 //	PonyEdit remote worker script. Don't alter me.
 //
-
 var fs = require( 'fs' );
 var net = require( 'net' );
 var crypto = require( 'crypto' );
@@ -21,6 +20,9 @@ server.listen( 0, '127.0.0.1', function() {
 		node: process.version,
 	} ) );
 	process.stdout.write( '****** PONYEDIT 2 PROMPT ******\n' );
+	
+	if ( global.onServerReady )
+		global.onServerReady();
 } );
 
 function chopBuffer( buffer, bytes ) {

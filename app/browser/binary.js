@@ -57,6 +57,9 @@ function _bin_decode( wb ) {
 				result.push( _bin_decode( wb ) );
 			return result;
 		
+        case 'b':   //  Boolean
+            return _dec_uint8( wb ) ? true : false;
+            
 		case 't':	//	Tiny int
 			return _dec_uint8( wb );
 		
@@ -139,15 +142,16 @@ function _bin_encode( wb, data ) {
 			break;
 		
 		case 'boolean':
-			_enc_byte( wb, 't' );
+			_enc_byte( wb, 'b' );
 			_enc_uint8( wb, data ? 1 : 0 );
 			break;
 		
 		case 'number':
-			if ( data >= 0 && data < 256 ) {
+            var isInteger = ( data % 1 === 0 );
+			if ( isInteger && data >= 0 && data < 256 ) {
 				_enc_byte( wb, 't' );
 				_enc_uint8( wb, data );
-			} else if ( data > -2147483640 && data < 2147483640) {
+			} else if ( isInteger && data > -2147483640 && data < 2147483640) {
 				_enc_byte( wb, 'i' );
 				_enc_int32( wb, data );
 			} else {
