@@ -14,16 +14,14 @@ FileBuffer.getByRfid = function( rfid ) {
 };
 
 FileBuffer.prototype.open = function( success, failure ) {
-    var fb = this;
-    
     fs.readFile( this.path, 'utf8', function( err, data ) {
         if ( err )
             return failure( err );
         
-        fb.content = data;
-        fb.dosEncoded = ( data.indexOf( '\r\n' ) > -1 );
+        this.content = data;
+        this.dosEncoded = ( data.indexOf( '\r\n' ) > -1 );
         success();
-    } );
+    }.bind( this ) );
 };
 
 FileBuffer.prototype.getContent = function() {
@@ -49,10 +47,10 @@ FileBuffer.prototype.modify = function( details ) {
 FileBuffer.prototype.save = function( checksum, success, failure ) {
     if ( this.getChecksum() != checksum )
         return failure( 'CHECKSUM_MISMATCH', 'The remote FileBuffer has a different checksum :(' );
-    
     fs.writeFile( this.path, this.content, function( err ) {
         if ( err )
             return failure( err );
+        
         success();
     } );
 };
