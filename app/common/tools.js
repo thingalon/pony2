@@ -12,20 +12,18 @@ if ( isNode ) {
 	//	Split a path into its components
 	Tools.splitPath = function( path ) {
         //  Does this look like a remote path? Accept both "ssh://user@server/path" and "user@server:path"
-        var sshRegex = new RegExp( '^(?:ssh:\/\/(?:(?:[^@]+)@)?(?:[^\/]+)(?:.*)|(?:([^@\/]+)@)?([^:]+):(.*))$' );
+        var sshRegex = new RegExp( '^(?:ssh:\/\/(?:([^@]+)@)?([^\/]+)(.*)|(?:([^@\/]+)@)?([^:]+):(.*))$' );
         var result = sshRegex.exec( path );
         if ( result ) {
             //  This is a remote path.
-            var remotePath = result[3];
-            console.log( remotePath );
-            console.log( JSON.stringify( result ) );
-			if ( ! remotePath.startsWith( '/' ) )
+            var remotePath = result[3] || result[6];
+            if ( ! remotePath.startsWith( '/' ) )
 				remotePath = '/' + remotePath;
 
             return {
                 type: Type.path.ssh,
-                user: result[1],
-                host: result[2],
+                user: result[1] || result[4],
+                host: result[2] || result[5],
                 path: remotePath
             };
         } else {
@@ -122,6 +120,9 @@ if ( isNode ) {
     
 } ( isNode ? exports : this.Tools = {} ) );
 
+if ( isNode )
+    var Tools = exports;
+
 //
 //	Handy extensions for core types.
 //
@@ -151,7 +152,9 @@ Date.prototype.prettyTimestamp = function() {
     if ( this.isToday() ) {
         //  If the date is today, just print the time.
         var hour = this.getHours();
-        if ( hour > 12 ) {
+        if ( hour == 12 ) {
+            var suffix = ' PM';
+        } else if ( hour > 12 ) {
             hour -= 12;
             var suffix = ' PM';
         } else {
