@@ -52,6 +52,11 @@ function WorkerTunnel( host ) {
 
 WorkerTunnel.nextTunnelId = 0;
 
+WorkerTunnel.prototype.close = function() {
+    if ( this.stream )
+        this.stream.close();
+};
+
 //	Called whenever the queue changes state, to check if we can send anything down the wire.
 WorkerTunnel.prototype.updateQueue = function() {
 	if ( ! this.connected )

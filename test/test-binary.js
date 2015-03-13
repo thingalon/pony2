@@ -1,6 +1,6 @@
 var Binary = require( '../app/browser/binary.js' );
 
-exports.binary = {
+exports.Binary = {
 
     'can encode and decode a range of UTF-8 characters': function( test ) {
         var testString = '!"#$%¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿' +

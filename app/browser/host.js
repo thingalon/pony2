@@ -5,16 +5,17 @@
 var Tools = require( '../common/tools.js' );
 var WorkerTunnel = require( './workertunnel.js' );
 
-var Connection = require( 'ssh2' );
+var Connection = require( 'ssh2' ).Client;
 var crypto = require( 'crypto' );
 var fs = require( 'fs' );
-var ipc = require( 'ipc' );
 var ChildProcess = require( 'child_process' );
 var path = require( 'path' );
+var events = require( 'events' );
 
-function Host( user, hostname ) {
-	this.user = user;
+function Host( user, hostname, port ) {
+    this.user = user;
 	this.hostname = hostname;
+    this.port = port || 22;
     this.isLocal = ( this.hostname == null );
 
 	this.allJobTunnels = [];	//	all 7 tunnels; non-bound jobs can go to the least busy of all
@@ -24,6 +25,7 @@ function Host( user, hostname ) {
 	this.jobQueue = [];
 	this.status = Host.state.idle;
 }
+Host.prototype = new events.EventEmitter;
 
 Host.knownHosts = [];
 Host.byRfid = {};
@@ -92,7 +94,11 @@ Host.findByRfid = function( rfid ) {
 		return Host.byRfid[ rfid ];
 	
 	return null;
-}
+};
+
+Host.prototype.setPassword = function( password ) {
+    this.password = password;
+};
 
 Host.prototype.handleJob = function( job ) {
 	this.jobQueue.push( job );
@@ -100,7 +106,7 @@ Host.prototype.handleJob = function( job ) {
 	
 	this.connect();
 	this.updateQueue();
-}
+};
 
 //	Called any time the job queue is updated, to find tunnels for each job.
 Host.prototype.updateQueue = function() {
@@ -153,6 +159,37 @@ Host.prototype.setState = function( state, message ) {
 	this.message = message;
 }
 
+Host.prototype.disconnect = function() {
+    if ( this.shellStream ) {
+        this.shellStream.end();
+        this.shellStream = null;
+    }
+    
+    for ( var i = 0; i < this.allJobTunnels.length; i++ ) {
+        this.allJobTunnels[ i ].close();
+    }
+    this.allJobTunnels = [];
+    this.boundJobTunnels = [];
+    
+    if ( this.connection != null ) {
+        this.connection.end();
+        this.connection = null;
+    }
+    
+    if ( this.childProcess ) {
+        this.childProcess.stdin.end();
+        this.childProcess.stdin = null;
+        
+        this.childProcess.stdout.end();
+        this.childProcess.stdout = null;
+        
+        this.childProcess.end();
+        this.childProcess = null;
+    }
+    
+    this.status = Host.state.idle;
+};
+
 Host.prototype.connect = function() {
 	if ( this.status == Host.state.connected || this.status == Host.state.connecting )
 		return;
@@ -167,12 +204,15 @@ Host.prototype.connect = function() {
         this.connection.on( 'ready', this.onConnectionReady.bind( this ) );
         this.connection.on( 'error', this.onConnectionError.bind( this ) );
 
-        this.connection.connect( {
+        var connectionSettings = {
             host: this.hostname,
-            port: 22,
+            port: this.port,
             username: this.user,
             agent: process.env.SSH_AUTH_SOCK,
-        } );
+            password: this.password,
+        }
+        
+        this.connection.connect( connectionSettings );
     }
 }
 
@@ -186,7 +226,7 @@ Host.prototype.startLocalWorker = function() {
             fs.mkdirSync( workerPath );
         }
     } catch( e ) {
-        this.onConnectionError( 'Failed to create directory at ' + workerPath );
+        this.onConnectionError( new Error( 'Failed to create directory at ' + workerPath ) );
     }
     
     //  Drop the plugin files into the right spot. Don't bother hashing like remote files; just writing a fistful of small files should be really fast anyway.
@@ -225,51 +265,51 @@ Host.prototype.getPromptReader = function( callback ) {
 }
 
 Host.prototype.onConnectionReady = function() {
-	var host = this;
-
 	//	Start a shell
 	this.connection.shell( '/bin/sh', function( err, stream ) {
 		if ( err )
-			return host.onConnectionError( err );
+			return this.onConnectionError( err );
 
-		host.shellStream = stream;
+		this.shellStream = stream;
 
 		//	Hook up some callback on shell events
-		stream.on( 'close', host.onShellClose.bind( host ) );
-		stream.on( 'data', host.onStdOut.bind( host ) );
-		stream.stderr.on( 'data', host.onStdErr.bind( host ) );
+		stream.on( 'close', this.onShellClose.bind( this ) );
+		stream.on( 'data', this.onStdOut.bind( this ) );
+		stream.stderr.on( 'data', this.onStdErr.bind( this ) );
 		
 		//	Try to launch the remote worker.
-		host.launchWorker();
-	} );
+		this.launchWorker();
+	}.bind( this ) );
 }
 
 Host.prototype.launchWorker = function( inRetry ) {
 	var host = this;
 	
-	console.log( 'Checking and launching remote worker' );
+    if ( ! global.silent )
+	   console.log( 'Checking and launching remote worker' );
+    
 	this.runShellCommand( Host.initCommand, function( result ) {
 		if ( ! result )
-			return host.onConnectionError( 'Timeout while setting up remote prompt!' );
+			return host.onConnectionError( new Error( 'Timeout while setting up remote prompt!' ) );
 
 		var resultRegExp = new RegExp( '((?:OK|NO|BORK|UPDATE)_(?:WORKER|NODE))([0-9.]*)' );
 		var resultMessage = resultRegExp.exec( result );
 		if ( ! resultMessage )
-			return host.onConnectionError( 'Unable to interpret response from server:\n' + result );
+			return host.onConnectionError( new Error( 'Unable to interpret response from server:\n' + result ) );
 		
 		var message = resultMessage[1];
 		
 		if ( 'NO_NODE' == message )
-			return host.onConnectionError( 'No Node.js found on the remote server!' );
+			return host.onConnectionError( new Error( 'No Node.js found on the remote server' ) );
 		
 		if ( 'BORK_NODE' == message ) {
-			return host.onConnectionError( 'Node.js returned some errors:\n' + result.substring( 0, result.indexOf( 'BORK_NODE' ) ) );
+			return host.onConnectionError( new Error( 'Node.js returned some errors:\n' + result.substring( 0, result.indexOf( 'BORK_NODE' ) ) ) );
 		}
 		
 		if ( 'UPDATE_WORKER' == message ) {
 			if ( inRetry ) {
 				//	Already tried updating the worker and it didn't work.
-				return host.onConnectionError( 'Tried to update the remote worker script, but something went wrong.' );
+				return host.onConnectionError( new Error( 'Tried to update the remote worker script, but something went wrong.' ) );
 			}
 
 			console.log( 'Uploading worker script...' );
@@ -291,7 +331,7 @@ Host.prototype.launchWorker = function( inRetry ) {
 			var uploadCmd = 'mkdir -p ~/.pony2;node -e "' + uploadScript + '" && echo "UPLOAD_OK";echo "****** PONYEDI""T 2 PROMPT ******"\n';
 			host.runShellCommand( uploadCmd, function( result ) {
 				if ( result.indexOf( 'UPLOAD_OK' ) == -1 )
-					return host.onConnectionError( 'Failed to upload remote worker script, node uploader failed to execute: ' + result );
+					return host.onConnectionError( new Error( 'Failed to upload remote worker script, node uploader failed to execute: ' + result ) );
 
 				//	Try launching the worker again
 				host.launchWorker( true );
@@ -306,7 +346,7 @@ Host.prototype.launchWorker = function( inRetry ) {
 			return;
 		}
 		
-		return host.onConnectionError( 'Invalid response code sent: "' + message + '"' );
+		return host.onConnectionError( new Error( 'Invalid response code sent: "' + message + '"' ) );
 	} );
 }
 
@@ -316,7 +356,7 @@ Host.prototype.parseWorkerHeader = function( rawHeader ) {
 	var headMarker = '*** HEAD ***';
 	var headMarkerPos = rawHeader.indexOf( headMarker );
 	if ( headMarkerPos === -1 )
-		return this.onConnectionError( 'Invalid worker script header!' );
+		return this.onConnectionError( new Error( 'Invalid worker script header!' ) );
 	rawHeader = rawHeader.substr( headMarkerPos + headMarker.length );
 
 	//	Shave off the pony prompt
@@ -328,12 +368,12 @@ Host.prototype.parseWorkerHeader = function( rawHeader ) {
 	try {
 		var header = JSON.parse( rawHeader );
 	} catch ( err ) {
-		return host.onConnectionError( 'Invalid worker script header: could not parse:\n' + rawHeader );
+		return host.onConnectionError( new Error( 'Invalid worker script header: could not parse:\n' + rawHeader ) );
 	}
 	
 	//	Check the header looks valid
 	if ( header.state != 'OK_WORKER' || ! header.port || ! header.clientKey || header.clientKey.length < 20 )
-		return host.onConnectionError( 'Invalid worker script header fields!' );
+		return host.onConnectionError( new Error( 'Invalid worker script header fields!' ) );
 	
 	this.workerSettings = header;
 
@@ -349,7 +389,9 @@ Host.prototype.parseWorkerHeader = function( rawHeader ) {
 		this.allJobTunnels.push( tunnel );
 		if ( i > 0 ) this.boundJobTunnels.push( tunnel );
 	}
-	
+	        
+    this.emit( 'connected' );
+    
 	this.updateQueue();
 }
 
@@ -365,19 +407,25 @@ Host.prototype.runShellCommand = function( command, callback ) {
 		
 		resultSent = true;
 		callback( false );
-	}, 10000 );
+	}, 10000 ).unref();
 	
 	this.shellStream.write( command );	
 }
 
 Host.prototype.onConnectionError = function( error ) {
-	console.log( 'Connection error. womp womp.' );
-	console.log( error );
-	//	TODO: actually do something about it.
+    if ( this.status == Host.state.idle )
+        return;
+    
+    if ( ! global.silent ) {
+        console.log( 'Connection error. womp womp.' );
+        console.log( error );
+    }
+	
+    this.emit( 'error', error );
 }
 
 Host.prototype.onShellClose = function() {
-	this.onConnectionError( 'Booo! Shell closed! ' );
+	this.onConnectionError( new Error( 'Booo! Shell closed! ' ) );
 }
 
 Host.prototype.onStdOut = function( data ) {

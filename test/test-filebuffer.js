@@ -3,10 +3,10 @@ var path = require( 'path' );
 var fs = require( 'fs' );
 var crypto = require( 'crypto' );
 
-exports.filebuffer = {
+exports.FileBuffer = {
     
     setUp: function( callback ) {
-        this.testFilePath = path.join( __dirname, 'test-filebuffer.txt' );
+        this.testFilePath = path.join( __dirname, 'data/test-filebuffer.txt' );
         this.testFileContents = fs.readFileSync( this.testFilePath );
         callback();
     },

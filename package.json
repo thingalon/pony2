@@ -15,7 +15,9 @@
 		"grunt-shell": "*",
 		"react-tools": "*",
 		"app": "file:./app/",
-		"nodeunit": "*",
-		"intercept-stdout": "*"
+		"nodeunit": ">=0.4.4",
+		"intercept-stdout": "*",
+		"ssh2": "*",
+		"ponyedit": "file:./app"
 	}
 }
