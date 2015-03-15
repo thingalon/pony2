@@ -57,9 +57,8 @@ var ViewStack = React.createClass( {
                 var componentClass = FileTypeManager.getComponentClassForViewType( viewType );
                 var cssClass = ( this.state.currentView == viewKey ? 'view visible' : 'view invisible' );
                 
-                views.push( <div className={ cssClass } >
+                views.push( <div className={ cssClass } key={ viewKey } >
                     { React.createElement( componentClass, {
-                        key: viewKey,
                         ref: viewKey,
                         className: cssClass,
                         filename: filename
