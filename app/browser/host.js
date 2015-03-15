@@ -118,7 +118,6 @@ Host.prototype.updateQueue = function() {
 		
 		//	Is this job bound to an rfid? Does that rfid already have a tunnel?
 		var rfid = job.args.r;
-        console.log( rfid );
 		if ( rfid && this.tunnelBindings[ rfid ] )
 			return this.tunnelBindings[ rfid ].takeJob( job );
 		
