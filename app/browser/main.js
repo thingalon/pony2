@@ -3,6 +3,7 @@ var settings = require( './settings.js' );
 var app = require( 'app' );
 var BrowserWindow = require( 'browser-window' );
 var ipc = require( 'ipc' );
+var path = require( 'path' );
 
 var Browser = {
     mainWindow: null,

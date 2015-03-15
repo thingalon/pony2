@@ -2,6 +2,39 @@
 <html>
 	<head>
 		<title>Hello World!</title>
+        
+        <!-- <script>
+            var js = (
+                "Object.defineProperty(" +
+                    "window, '__REACT_DEVTOOLS_GLOBAL_HOOK__', {value: {" +
+                    "inject: function(runtime) { this._reactRuntime = runtime; }," +
+                    "getSelectedInstance: null," +
+                    "Overlay: null" +
+                    "}}" +
+                ")"
+            );
+
+            // This script runs before the <head> element is created, so we add the script
+            // to <html> instead.
+            var script = document.createElement('script');
+            script.textContent = js;
+            document.documentElement.appendChild(script);
+            script.parentNode.removeChild(script);
+        </script> -->
+        
+        <script>
+            //  Hack in __REACT_DEVTOOLS_GLOBAL_HOOK__ to make ReactJS tools run inside Atom-shell happily.
+            //  (based on https://github.com/atom/atom-shell/issues/915)
+            Object.defineProperty(
+                window, '__REACT_DEVTOOLS_GLOBAL_HOOK__', {
+                    value: {
+                        inject: function(runtime) { this._reactRuntime = runtime; },
+                        getSelectedInstance: null,
+                        Overlay: null,
+                    } 
+                }
+            );
+        </script>
 
 		<!-- 3rd party things -->
 		<link rel="stylesheet" type="text/css" href="vendor/font-awesome/css/font-awesome.css">
