@@ -66,7 +66,7 @@ var OpenFileTree = React.createClass( {
 	renderFolder: function( folder ) {
 		var tree = this;
 		return (
-			<li key="path.label" className="path">
+			<li key={ folder.label } className="path">
 				<span>{ folder.label }</span>
 				<ul>
 					{ folder.files.map( function( f ) {
@@ -80,7 +80,7 @@ var OpenFileTree = React.createClass( {
 	renderHost: function( host ) {
 		var tree = this;
 		return (
-			<li key="host.label" className="host">
+			<li key={ host.label } className="host">
 				<span>{ host.label }</span>
 				<ul>
 					{ host.folders.map( function( p ) {

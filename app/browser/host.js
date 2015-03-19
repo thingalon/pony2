@@ -251,9 +251,17 @@ Host.prototype.getPromptReader = function( callback ) {
     var resultSent = false;
     var allData = '';
     
+	setTimeout( function() {
+		if ( resultSent )
+			return;
+		
+		resultSent = true;
+		callback( false );
+	}, 10000 ).unref();
+    
     return function( data ) {
 		if ( resultSent )
-			return;	
+			return;
         
 		allData += data.toString();
 		if ( allData.indexOf( Host.shellPrompt ) > -1 ) {
@@ -399,15 +407,6 @@ Host.prototype.runShellCommand = function( command, callback ) {
 	var resultSent = false;
 
 	this.stdoutHandler = this.getPromptReader( callback );
-    
-	setTimeout( function() {
-		if ( resultSent )
-			return;
-		
-		resultSent = true;
-		callback( false );
-	}, 10000 ).unref();
-	
 	this.shellStream.write( command );	
 }
 
