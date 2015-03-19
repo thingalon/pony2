@@ -265,8 +265,8 @@ Host.prototype.getPromptReader = function( callback ) {
         
 		allData += data.toString();
 		if ( allData.indexOf( Host.shellPrompt ) > -1 ) {
-			callback( allData );
 			resultSent = true;
+            callback( allData );
 		}
 	}
 }

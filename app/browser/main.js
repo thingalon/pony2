@@ -9,6 +9,11 @@ var Browser = {
     mainWindow: null,
 };
 
+process.on( 'uncaughtException', function( err ) {
+    if ( err.message != 'stream.push() after EOF' )
+        console.error( err.stack );
+} );
+
 Browser.start = function() {
     //	On window close, quit.
     app.on( 'window-all-closed', app.quit.bind( app ) );
