@@ -4,7 +4,7 @@
 
 var OpenFileTree = React.createClass( {
 
-    fileTree: [],
+    fileTree: {},
     
     componentDidMount: function() {
         this.updateFileTree();
@@ -15,37 +15,23 @@ var OpenFileTree = React.createClass( {
     },
     
     updateFileTree: function() {
-        this.fileTree = [];
-        var currentHost = null, currentFolder = null;
+        this.fileTree = {};
     
         for ( var i = 0; i < this.props.openFiles.length; i++ ) {
             var file = this.props.openFiles[ i ];
             var pathPieces = Tools.splitPath( file.path );
             
-            var host = pathPieces.host || 'Local Files';
+            var host = pathPieces.host || '( Local Files )';
             var folder = Tools.folderName( pathPieces.path );
             var filename = Tools.filename( pathPieces.path );
             
-            if ( currentHost == null || currentHost.label != host ) {
-                this.fileTree.push( currentHost = {
-                    label: host,
-                    folders: [],
-                } );
-                currentFolder = null;
-            }
+            if ( ! this.fileTree[ host ] )
+                this.fileTree[ host ] = {};
             
-            if ( currentFolder == null || currentFolder.label != folder ) {
-                currentHost.folders.push( currentFolder = {
-                    label: folder,
-                    files: [],
-                } );
-            }
+            if ( ! this.fileTree[ host ][ folder ] )
+                this.fileTree[ host ][ folder ] = {};
             
-            currentFolder.files.push( {
-                label: filename,
-                path: file.path,
-                file: file,
-            } );
+            this.fileTree[ host ][ folder ][ filename ] = file;
         }
     },
     
@@ -53,49 +39,40 @@ var OpenFileTree = React.createClass( {
         App.ui.showFile( path );
     },
     
-	renderFile: function( file ) {
+	renderFile: function( filename, file ) {
         var selectedClass = ( file.path == this.props.currentFile ? 'selected' : '' );
     
 		return (
-			<li key={ file.path } className={ "file " + selectedClass } onClick={ this.onFileClick.bind( this, file.path ) } data-path={ file.path }>
-				{ file.label }
+			<li key={ filename } className={ "file " + selectedClass } onClick={ this.onFileClick.bind( this, file.path ) } data-path={ file.path }>
+				{ filename }
 			</li>
 		);
 	},
 	
-	renderFolder: function( folder ) {
-		var tree = this;
+	renderFolder: function( folder, files ) {
 		return (
-			<li key={ folder.label } className="path">
-				<span>{ folder.label }</span>
+			<li key={ folder } className="path">
+				<span>{ folder }</span>
 				<ul>
-					{ folder.files.map( function( f ) {
-						return tree.renderFile( f ); 
-					} ) }
+					{ Tools.sortObject( Tools.mapObject( files, this.renderFile ) ) }
 				</ul>
 			</li>
 		);
 	},
 	
-	renderHost: function( host ) {
-		var tree = this;
+	renderHost: function( host, folders ) {
 		return (
-			<li key={ host.label } className="host">
-				<span>{ host.label }</span>
+			<li key={ host } className="host">
+				<span>{ host }</span>
 				<ul>
-					{ host.folders.map( function( p ) {
-						return tree.renderFolder( p );
-					} ) }
+					{ Tools.sortObject( Tools.mapObject( folders, this.renderFolder ) ) }
 				</ul>
 			</li>
 		);
 	},
 
 	renderHosts: function() {
-		var tree = this;
-		return this.fileTree.map( function( h ) {
-			return tree.renderHost( h );
-		} );
+        return Tools.sortObject( Tools.mapObject( this.fileTree, this.renderHost ) );
 	},
 
     render: function() {

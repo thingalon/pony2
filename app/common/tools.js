@@ -136,6 +136,21 @@ if ( isNode ) {
         return number.length >= width ? number : new Array( width - number.length + 1 ).join( padding ) + number;
     };
     
+    Tools.mapObject = function( obj, fn ) {
+        var result = {};
+        for ( var key in obj )
+            result[ key ] = fn( key, obj[ key ] );
+        return result;
+    };
+    
+    Tools.sortObject = function( obj, sortFunction ) {
+        var keys = Object.keys( obj ).sort( sortFunction );
+        var result = [];
+        for ( var i = 0; i < keys.length; i++ )
+            result.push( obj[ keys[ i ] ] );
+        return result;
+    };
+
 } ( isNode ? exports : this.Tools = {} ) );
 
 if ( isNode )
@@ -190,16 +205,6 @@ Date.prototype.prettyTimestamp = function() {
         return date;
     }
 }
-
-Object.defineProperty( Object.prototype, 'map', {
-	value: function( f ) {
-		var self = this;
-		var result = {};
-		for ( var key in this )
-			result[ key ] = f.call( this, key, this[ key ] );
-        return result;
-    }
-});
 
 Buffer.prototype.chop = function( bytes ) {
 	if ( this.length > bytes ) {
