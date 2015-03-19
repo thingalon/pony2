@@ -45,7 +45,25 @@ if ( isNode ) {
 		var pieces = Tools.splitPath( path );
 		return pieces.type == Type.path.ssh;
 	};
-	
+    
+    //  Returns the directory/folder name part of the path
+    Tools.folderName = function( path ) {
+        var lastSlash = path.lastIndexOf( '/' );
+        if ( lastSlash > -1 )
+            return path.substr( 0, lastSlash + 1 );
+        else
+            return '/';
+    };
+    
+    //  Returns the filename part of the path.
+	Tools.filename = function( path ) {
+        var lastSlash = path.lastIndexOf( '/' );
+        if ( lastSlash > -1 )
+            return path.substr( lastSlash + 1 );
+        else
+            return path;
+    };
+    
 	//	Returns the parent of the specified path (if one exists), otherwise false.
 	Tools.parentPath = function( path ) {
 		var pieces = Tools.splitPath( path );

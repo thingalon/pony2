@@ -17,18 +17,20 @@ div.main-layout {
 	width: 100%;
 	height: 100%;
 
-	div#left-bar-mount {
+	ul.left-bar {
 		width: 250px;
 		height: 100%;
 		overflow: scroll;
+        margin: 0px;
 		
 		background-color: #ddd;
 	}
 	
-	div#view-stack-mount {
+	div.view-stack {
 		flex-grow: 1;
 		height: 100%;
 		position: relative;
+        margin: 0px;
 	}
 }
 

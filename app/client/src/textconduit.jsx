@@ -15,6 +15,8 @@ function TextConduit( path ) {
         mode: aceMode.mode,
     };
     
+    App.ui.registerOpenFile( this );
+    
     this.open();
 }
 

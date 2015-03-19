@@ -17,14 +17,13 @@ var ViewStack = React.createClass( {
         
         return ViewStack.nextViewKey++;
     },
-	
-	show: function( filename, viewType ) {
+    
+    show: function( filename, viewType ) {
         //  Is there already a view open for this filename / viewType combo?
         if ( this.state.views[ filename ] && this.state.views[ filename ][ viewType ] ) {
             this.setState( {
                 currentView: this.state.views[ filename ][ viewType ]
             } );
-            return;
         }
         
         this.open( filename, viewType );
@@ -68,11 +67,11 @@ var ViewStack = React.createClass( {
         }
         
         if ( views.length == 0 ) {
-            return (
+            return <div className="view-stack">
 				<StatusArea type="blank" icon="fa-question">
 					Nothing open. Hit cmd-o to open something.
 				</StatusArea>
-			);
+			</div>;
         } else {
             return <div className="view-stack"> { views } </div>;
         }

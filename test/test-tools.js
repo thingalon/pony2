@@ -185,5 +185,17 @@ exports.Tools = {
         test.equal( chopped.toString(), 'st' );
         test.done();
     },
+    
+    'can pull the folder name component from a path': function( test ) {
+        test.equals( Tools.folderName( 'foobar.txt' ), '/' );
+        test.equals( Tools.folderName( '/foo/bar/baz.txt' ), '/foo/bar/' );
+        test.done();
+    },
+    
+    'can pull the file name component from a path': function( test ) {
+        test.equals( Tools.filename( 'foobar.txt' ), 'foobar.txt' );
+        test.equals( Tools.filename( '/foo/bar/baz.txt' ), 'baz.txt' );
+        test.done();
+    },
 
 };

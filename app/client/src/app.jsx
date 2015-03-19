@@ -3,64 +3,29 @@
 //
 
 ( function( App ) {
-    var files = {};
-
-	App.initialize = function() {
+	
+    App.initialize = function() {
 		//	Setup Main Menu
-		App.mainMenu = Menu.buildFromTemplate( mainMenuTemplate );
+		this.mainMenu = Menu.buildFromTemplate( mainMenuTemplate );
 		Menu.setApplicationMenu( App.mainMenu );
 		
-		//	Setup the left bar
-		App.leftBar = React.render(
-			<LeftBar />,
-			document.getElementById( 'left-bar-mount' )
-		);
-		App.openFileTree = App.leftBar.refs.openFileTree;
-
-		//	Setup View Stack
-		App.viewStack = React.render(
-			<ViewStack />,
-			document.getElementById( 'view-stack-mount' )
-		);
+        //  Setup UI
+        this.ui = React.render( <UI />, document.body );
 	};
 
 	App.showOpenDialog = function() {
-		React.render(
-			<div className="overlay">
-				<FileDialog onAccept={ App.onOpenDialogResult } />
-			</div>,
-			document.getElementById( 'overlay-layer' )	
-		);
+        var overlayKey = this.ui.openOverlay( <FileDialog onAccept={ function( filenames ) {
+            this.ui.closeOverlay( overlayKey );
+            
+            for ( var i = 0; i < filenames.length; i++ )
+                this.ui.showFile( filenames[ i ] );
+        }.bind( this ) } /> );
 	};
-	
-	App.onOpenDialogResult = function( filenames ) {
-		React.unmountComponentAtNode( document.getElementById( 'overlay-layer' ) );
-	
-		for ( var i = 0; i < filenames.length; i++ )
-			App.showFile( filenames[ i ] );
-	};
-	
-	App.showFile = function( filename, viewType ) {
-        //  If no viewType has been specificed, guess one.
-        if ( ! viewType ) {
-            //  TODO.
-        }
-        
-        //  If no viewType has been found, fall back to 'text' by default.
-        viewType = viewType || 'text';
-        
-        //  Open a view (if not already open)
-        App.viewStack.show( filename, viewType );
-	};
-    
-    App.getFileByName = function( filename ) {
-        return files[ filename ];
-    };
     
     App.save = function() {
         var currentView = App.viewStack.getCurrentView();
         if ( currentView && currentView.save )
             currentView.save();
     };
-
+    
 } )( window.App = window.App || {} );
