@@ -24,6 +24,7 @@ var ViewStack = React.createClass( {
             this.setState( {
                 currentView: this.state.views[ filename ][ viewType ]
             } );
+            return;
         }
         
         this.open( filename, viewType );

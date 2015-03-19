@@ -6,9 +6,11 @@ var LeftBar = React.createClass( {
 
 	render: function() {
 		return (
-			<ul className="left-bar">
-				<OpenFileTree ref="openFileTree" openFiles={ this.props.openFiles } currentFile={ this.props.currentFile } />
-			</ul>
+			<div className="left-bar">
+                <ul className="left-bar">
+				    <OpenFileTree ref="openFileTree" openFiles={ this.props.openFiles } currentFile={ this.props.currentFile } />
+                </ul>
+            </div>
 		);
 	},
 

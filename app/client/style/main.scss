@@ -17,12 +17,10 @@ div.main-layout {
 	width: 100%;
 	height: 100%;
 
-	ul.left-bar {
+	div.left-bar {
 		width: 250px;
 		height: 100%;
 		overflow: scroll;
-        margin: 0px;
-		
 		background-color: #ddd;
 	}
 	
@@ -30,7 +28,6 @@ div.main-layout {
 		flex-grow: 1;
 		height: 100%;
 		position: relative;
-        margin: 0px;
 	}
 }
 
@@ -45,6 +42,7 @@ div.ace {
 //	Left bar
 ul.left-bar {
 	padding: 5px;
+    margin: 0px;
 	
 	div.open-file-list {
 		ul {
@@ -54,7 +52,6 @@ ul.left-bar {
 			li.host {
 				> span {
 					display: block;
-					width: 100%;
 					border-bottom: 1px solid #777;
 					padding: 0px 5px;
 					color: #777;
@@ -74,6 +71,10 @@ ul.left-bar {
 			li.file {
 				font-size: 100%;
 				padding-left: 20px;
+                
+                &.hover {
+                    background-color: #ddf;
+                }
 				
 				&.selected {
 					color: white;
