@@ -171,7 +171,7 @@ exports.Tools = {
             c: 3,
         };
         
-        var result = testObject.map( function( key, value ) {
+        var result = Tools.mapObject( testObject, function( key, value ) {
             return value + 1;
         } );
         
