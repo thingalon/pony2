@@ -10,8 +10,7 @@ var Browser = {
 };
 
 process.on( 'uncaughtException', function( err ) {
-    if ( err.message != 'stream.push() after EOF' )
-        console.error( err.stack );
+    console.error( err.stack );
 } );
 
 Browser.start = function() {
