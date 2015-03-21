@@ -273,7 +273,9 @@ Host.prototype.getPromptReader = function( callback ) {
 
 Host.prototype.onConnectionReady = function() {
 	//	Start a shell
+    console.log( 'Launching remote shell' );
 	this.connection.shell( '/bin/sh', function( err, stream ) {
+        console.log( 'Remote shell launched.' );
 		if ( err )
 			return this.onConnectionError( err );
 
