@@ -23,7 +23,7 @@
 	};
     
     App.save = function() {
-        var currentView = App.viewStack.getCurrentView();
+        var currentView = this.ui.getCurrentView();
         if ( currentView && currentView.save )
             currentView.save();
     };

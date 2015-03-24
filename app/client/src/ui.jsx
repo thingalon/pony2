@@ -37,6 +37,10 @@ var UI = React.createClass( {
             currentFile: filename,
         } );
 	},
+    
+    getCurrentView: function() {
+        return this.refs.viewStack.getCurrentView();
+    },
         
     registerOpenFile: function( conduit ) {
         this.state.openFiles.push( conduit );
