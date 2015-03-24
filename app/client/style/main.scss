@@ -177,41 +177,34 @@ div.status-area { 	//	Big flat-color area with a status message, maybe a bg-icon
 
 
 //	Overlays and dialogs
-div.overlay-layer {
+/*div.overlay-layer {
 	position: absolute;
 	width: 100%;
 	top: 0;
 	left: 0;
 	z-index: 1000;
-}
+}*/
 
-div.dialog {
-	display: flex;
-	flex-direction: column;
-
-	position: relative;
-	margin-left: auto;
-	margin-right: auto;
-	top: 0px;
-
-	border: solid black;
-	border-width: 0 1px 1px;
-	box-shadow: 1px 1px 10px #888;
-
-	span.title {
-		display: block;
-		border-bottom: 1px solid black;
-		background-color: #ddd;
-		padding: 10px;
-		font-weight: bold;
-	}
-
-	div.content {
-		flex-grow: 100;
-		background-color: #f5f5f5;	
-	}
-
-	div.button-bar {
+dialog {
+    border: 2px solid black;
+    padding: 0px;
+    box-shadow: 1px 1px 10px #888;
+    flex-direction: column;
+    display: flex;
+    
+    span.title {
+        display: block;
+        border-bottom: 1px solid black;
+        background-color: #ddd;
+        padding: 10px;
+        font-weight: bold;
+    }
+    
+    div.content {
+        flex-grow: 100;
+    }
+    
+    div.button-bar {
 		padding: 10px;
 		text-align: right;
 	
@@ -222,61 +215,12 @@ div.dialog {
 		}
 	}
 }
-
-//	Favorites
-ul.favorites {
-	li.favorite {
-		position: relative;	
-
-		&.editing {
-			padding: 5px;
-			border-top: 1px solid gray;
-			border-bottom: 1px solid gray;
-			background-color: white;
-			
-			input {
-				width: 95%;
-			}
-			
-			div.button-bar {
-				text-align: right;
-				padding: 0px;
-				
-				button {
-					width: 40%;
-					margin: 2px;
-
-					&.delete {
-						color: red;
-					}
-					
-					&.done {
-						color: green;
-					}
-				}
-			}
-		}
-		
-		a.edit {
-			float: right;
-			text-decoration: none;
-			color: black;
-			visibility: hidden;
-		}
-		
-		&:hover {
-			a.edit {
-				visibility: visible;
-			}
-		}
-	}
-}
-
 	
 //	File dialog
-div.file-dialog {
-	width: 800px;
-	height: 450px;
+dialog.file-dialog {
+    width: 800px;
+    top: 10%;
+    height: 80%;
 
 	div.content {
 		display: flex;
@@ -305,7 +249,7 @@ div.file-dialog {
 	}
 	
 	div.folders {
-		width: 15em;
+		width: 18em;
 		border-right: 1px solid #aaa;
 		
 		ul {
@@ -383,6 +327,55 @@ div.file-dialog {
 						width: 20%;
 					}
 				}
+			}
+		}
+	}
+}
+
+//	Favorites
+ul.favorites {
+	li.favorite {
+		position: relative;	
+
+		&.editing {
+			padding: 5px;
+			border-top: 1px solid gray;
+			border-bottom: 1px solid gray;
+			background-color: white;
+			
+			input {
+				width: 95%;
+			}
+			
+			div.button-bar {
+				text-align: right;
+				padding: 0px;
+				
+				button {
+					width: 40%;
+					margin: 2px;
+
+					&.delete {
+						color: red;
+					}
+					
+					&.done {
+						color: green;
+					}
+				}
+			}
+		}
+		
+		a.edit {
+			float: right;
+			text-decoration: none;
+			color: black;
+			visibility: hidden;
+		}
+		
+		&:hover {
+			a.edit {
+				visibility: visible;
 			}
 		}
 	}

@@ -67,10 +67,14 @@ var FileDialog = React.createClass( {
 	onRefreshClick: function() {
 		this.refs.filetable.forceLoad();
 	},
+    
+    componentDidMount: function() {
+        this.getDOMNode().showModal();
+    },
 	
 	render: function() {
 		return (
-			<div className="dialog file-dialog">
+			<dialog className="dialog file-dialog">
 				<span className="title">
 					Open File
 				</span>
@@ -95,7 +99,7 @@ var FileDialog = React.createClass( {
 						<button className="ok" onClick={ this.onAccept }>OK</button>
 					</div>
 				</div>
-			</div>
+			</dialog>
 		);
 	}
 } );
