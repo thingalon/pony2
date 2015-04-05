@@ -109,7 +109,7 @@ TextConduit.prototype.onDocumentChange = function( details ) {
         for ( var i = 0; i < change.lines.length; i++ )
             change.length += change.lines[ i ].length + 1;
     } else if ( change.action == 'insertLines' ) {
-        change.text = change.lines.join( '\n' );
+        change.text = change.lines.join( '\n' ) + '\n';
     }
     
     //  Can this change get clumped with the previous one?
