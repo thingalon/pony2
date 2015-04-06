@@ -30,7 +30,10 @@ module.exports = function(grunt) {
 			},
 			'win': {
 				command: dir + '\\atom.exe app'
-			}
+			},
+            'test': {
+                command: dir + '/Atom.app/Contents/MacOS/Atom test/lib/nodeunit-wrap.js 2> /dev/null'
+            },
 		},
 		'react': {
 			'dynamic_mappings': {
@@ -75,6 +78,10 @@ module.exports = function(grunt) {
 		'init',
 		'download-atom-shell'
 	]);
+    
+    grunt.registerTask('test', function() {
+        grunt.task.run('shell:test');
+    });
 	
 	grunt.registerTask('run', function() {
 		if (process.platform === 'darwin')
