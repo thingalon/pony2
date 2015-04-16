@@ -31,6 +31,10 @@ var UI = React.createClass( {
     },
     
     showOpenDialog: function() {
+        if ( UI.showingOpenDialog )
+            return;
+        UI.showingOpenDialog = true;
+      
         var path = null;
         var currentView = this.getCurrentView();
         if ( currentView && currentView.getPath )
@@ -38,6 +42,7 @@ var UI = React.createClass( {
       
         var onAccept = function( filenames ) {
             this.closeOverlay( overlayKey );
+            UI.showingOpenDialog = false;
             
             for ( var i = 0; i < filenames.length; i++ )
                 this.showFile( filenames[ i ] );
@@ -45,6 +50,7 @@ var UI = React.createClass( {
         
         var onCancel = function() {
             this.closeOverlay( overlayKey );
+            UI.showingOpenDialog = false;
         }.bind( this );
       
         var overlayKey = this.openOverlay( <FileDialog defaultPath={ path } onAccept={ onAccept } onCancel={ onCancel } /> );
