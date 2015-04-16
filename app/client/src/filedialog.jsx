@@ -42,6 +42,11 @@ var FileDialog = React.createClass( {
 			path += '/';
 		return path + filename;
 	},
+    
+    onCancel: function() {
+        if ( this.props.onCancel )
+            this.props.onCancel();
+    },
 	
 	onAccept: function() {
 		var fileTable = this.refs.filetable;
@@ -104,7 +109,7 @@ var FileDialog = React.createClass( {
 						</div>
 					</div>
 					<div className="button-bar">
-						<button className="cancel">Cancel</button>
+						<button className="cancel" onClick={ this.onCancel }>Cancel</button>
 						<button className="ok" onClick={ this.onAccept }>OK</button>
 					</div>
 				</div>

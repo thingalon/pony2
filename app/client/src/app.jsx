@@ -18,13 +18,19 @@
         var currentView = this.ui.getCurrentView();
         if ( currentView && currentView.getPath )
             path = Tools.folderName( currentView.getPath() );
-        
-        var overlayKey = this.ui.openOverlay( <FileDialog defaultPath={ path } onAccept={ function( filenames ) {
+      
+        var onAccept = function( filenames ) {
             this.ui.closeOverlay( overlayKey );
             
             for ( var i = 0; i < filenames.length; i++ )
                 this.ui.showFile( filenames[ i ] );
-        }.bind( this ) } /> );
+        }.bind( this );
+        
+        var onCancel = function() {
+            this.ui.closeOverlay( overlayKey );
+        }.bind( this );
+      
+        var overlayKey = this.ui.openOverlay( <FileDialog defaultPath={ path } onAccept={ onAccept } onCancel={ onCancel } /> );
 	};
     
     App.save = function() {
