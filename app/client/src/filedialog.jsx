@@ -4,7 +4,14 @@
 
 var FileDialog = React.createClass( {
 	getInitialState: function() {
-		var path = Settings.get( 'homeDirectory' );
+        var path = null;
+        if ( this.props.defaultPath != null )
+            path = this.props.defaultPath;
+        else if ( FileDialog.lastPath )
+            path = FileDialog.lastPath;
+        else
+            path = Settings.get( 'homeDirectory' );
+        
 		return {
 			path: path,
 			pathInputValue: path,
@@ -73,6 +80,8 @@ var FileDialog = React.createClass( {
     },
 	
 	render: function() {
+        FileDialog.lastPath = this.state.path;
+    
 		return (
 			<dialog className="dialog file-dialog">
 				<span className="title">

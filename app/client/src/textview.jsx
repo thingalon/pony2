@@ -25,6 +25,10 @@ var TextView = React.createClass( {
     save: function() {
         this.conduit.save();
     },
+    
+    getPath: function() {
+        return this.props.filename;
+    },
 
     render: function() {
         switch ( this.state.conduitState ) {
