@@ -207,7 +207,7 @@ TextConduit.prototype.save = function() {
 			console.log( 'Saved!' );
 		},
         onFailure: function( job, code, message ) {
-            console.log( 'Failed to save! :(' );
+            App.ui.messageBox( 'error', 'Failed to save!', 'Error: ' + message );
         }
 	} );
 };

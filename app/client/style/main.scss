@@ -191,6 +191,7 @@ dialog {
     box-shadow: 1px 1px 10px #888;
     flex-direction: column;
     display: flex;
+    z-index: 100;
     
     span.title {
         display: block;
@@ -215,6 +216,22 @@ dialog {
 		}
 	}
 }
+
+//	Message Box
+dialog.message-box {
+    top: 30%;
+    
+    div.content {
+        padding: 15px;
+    }
+    
+    &.error {
+        span.title {
+            background-color: #f99;
+        }
+    }
+}
+
 	
 //	File dialog
 dialog.file-dialog {

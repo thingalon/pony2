@@ -10,6 +10,14 @@ var UI = React.createClass( {
         };
     },
     
+    messageBox: function( style, title, body ) {
+        var overlayKey = this.openOverlay( <MessageBox style={ style } title={ title } body={ body } onAccept={
+            function() {
+                App.ui.closeOverlay( overlayKey );
+            }
+        } /> );
+    },
+    
     openOverlay: function( overlay ) {
         var key = 'k' + this.nextOverlayKey++;
         this.state.overlays[ key ] = React.addons.cloneWithProps( overlay, { key: key } );
