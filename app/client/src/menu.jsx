@@ -29,7 +29,7 @@ var mainMenuTemplate = [
 				label: 'Open File',
 				accelerator: 'Command+O',
 				click: function() {
-					App.showOpenDialog();
+					App.ui.showOpenDialog();
 				},
 			},
 			{

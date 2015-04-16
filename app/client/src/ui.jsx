@@ -30,6 +30,26 @@ var UI = React.createClass( {
         this.setState( { overlays: this.state.overlays } );
     },
     
+    showOpenDialog: function() {
+        var path = null;
+        var currentView = this.getCurrentView();
+        if ( currentView && currentView.getPath )
+            path = Tools.folderName( currentView.getPath() );
+      
+        var onAccept = function( filenames ) {
+            this.closeOverlay( overlayKey );
+            
+            for ( var i = 0; i < filenames.length; i++ )
+                this.showFile( filenames[ i ] );
+        }.bind( this );
+        
+        var onCancel = function() {
+            this.closeOverlay( overlayKey );
+        }.bind( this );
+      
+        var overlayKey = this.openOverlay( <FileDialog defaultPath={ path } onAccept={ onAccept } onCancel={ onCancel } /> );
+	},
+    
     showFile: function( filename, viewType ) {
         //  If no viewType has been specificed, guess one.
         if ( ! viewType ) {
