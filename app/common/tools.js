@@ -166,6 +166,11 @@ if ( isNode ) {
         if ( keyEvent.metaKey && keyEvent.keyCode == 40 ) {
             return 'go_in';
         }
+        
+        //  cmd+a
+        if ( keyEvent.metaKey && keyEvent.keyCode == 65 ) {
+            return 'select_all';
+        }
     };
     
     //  Output a keypress to the console.

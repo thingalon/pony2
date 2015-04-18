@@ -248,6 +248,16 @@ var FileTable = React.createClass( {
 			</tr>
 		);
 	},
+    
+    selectAll: function() {
+        var selection = {};
+        for ( var i = 0; i < this.state.filenames.length; i++ )
+            selection[ this.state.filenames[ i ] ] = 1;
+        
+        this.setState( {
+            selected: selection,
+        } );
+    },
 
 	render: function() {
 		if ( this.state.error !== null ) {

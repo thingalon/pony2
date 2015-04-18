@@ -29,15 +29,19 @@ var FileDialog = React.createClass( {
     onKeyDown: function( event ) {
         var chord = Tools.findKeyChord( event );
         
-        //  Enter / cmd+down
-        if ( 13 == event.keyCode || 'go_in' == chord ) {
+        if ( 13 == event.keyCode || 'go_in' == chord )
             this.onAccept();
-        }
-        
-        //  cmd+up
-        if ( 'go_out' == chord ) {
+        else if ( 'go_out' == chord )
             this.onLevelUpClick();
-        }
+        else if ( 'select_all' == chord )
+            this.selectAll( event.target );
+    },
+    
+    selectAll: function( target ) {
+        if ( target.tagName == 'INPUT' )
+            target.select();
+        else
+            this.refs.filetable.selectAll();
     },
 	
 	onPathInputChange: function( event ) {
