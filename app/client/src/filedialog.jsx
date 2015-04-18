@@ -118,7 +118,7 @@ var FileDialog = React.createClass( {
         FileDialog.lastPath = this.state.path;
     
 		return (
-			<dialog className="dialog file-dialog" tabindex="0" onKeyDown={ this.onKeyDown }>
+			<dialog className="dialog file-dialog" tabIndex="0" onKeyDown={ this.onKeyDown }>
 				<span className="title">
 					Open File
 				</span>
@@ -132,8 +132,8 @@ var FileDialog = React.createClass( {
                             onKeyDown={ this.onPathKeyDown }
                             ref="pathBox"
                         />
-						<button className="up fa fa-level-up" title="Parent Directory" tabindex="-1" onClick={ this.onLevelUpClick }></button>
-						<button className="refresh fa fa-refresh" title="Refresh" tabindex="-1" onClick={ this.onRefreshClick }></button>
+						<button className="up fa fa-level-up" title="Parent Directory" tabIndex="-1" onClick={ this.onLevelUpClick }></button>
+						<button className="refresh fa fa-refresh" title="Refresh" tabIndex="-1" onClick={ this.onRefreshClick }></button>
 					</div>
 					<div className="columns">
 						<div className="folders">
