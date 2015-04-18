@@ -27,11 +27,17 @@ var FileDialog = React.createClass( {
 	},
     
     onKeyDown: function( event ) {
-        if ( event.which == 13 ) {  //  Enter on the dialog itself (select)
+        var chord = Tools.findKeyChord( event );
+        
+        //  Enter / cmd+down
+        if ( 13 == event.keyCode || 'go_in' == chord ) {
             this.onAccept();
         }
         
-        console.log( event.keyCode );
+        //  cmd+up
+        if ( 'go_out' == chord ) {
+            this.onLevelUpClick();
+        }
     },
 	
 	onPathInputChange: function( event ) {

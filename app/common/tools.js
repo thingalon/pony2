@@ -150,6 +150,36 @@ if ( isNode ) {
             result.push( obj[ keys[ i ] ] );
         return result;
     };
+    
+    //  Find common key chords and describe what they mean. Useful to make things cross-platform later.
+    Tools.findKeyChord = function( keyEvent ) {  
+        return findMacKeyChord( keyEvent );
+    };
+    
+    function findMacKeyChord( keyEvent ) {
+        //  cmd+up
+        if ( keyEvent.metaKey && keyEvent.keyCode == 38 ) {
+            return 'go_out';
+        }
+        
+        //  cmd+down
+        if ( keyEvent.metaKey && keyEvent.keyCode == 40 ) {
+            return 'go_in';
+        }
+    };
+    
+    //  Output a keypress to the console.
+    Tools.logKeyPress = function( keyEvent ) {
+        var description = '';
+        var modifiers = [ 'ctrlKey', 'altKey', 'metaKey', 'shiftKey' ];
+        for ( var i = 0; i < modifiers.length; i++ ) {
+            if ( keyEvent[ modifiers[ i ] ] )  {
+                description += modifiers[ i ] + ' ';
+            }
+        }
+        description += keyEvent.keyCode;
+        console.log( description );
+    };
 
 } ( isNode ? exports : this.Tools = {} ) );
 
