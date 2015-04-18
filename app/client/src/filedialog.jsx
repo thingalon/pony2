@@ -30,6 +30,8 @@ var FileDialog = React.createClass( {
         if ( event.which == 13 ) {  //  Enter on the dialog itself (select)
             this.onAccept();
         }
+        
+        console.log( event.keyCode );
     },
 	
 	onPathInputChange: function( event ) {
