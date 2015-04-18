@@ -15,25 +15,46 @@ var FileDialog = React.createClass( {
 		return {
 			path: path,
 			pathInputValue: path,
+            search: '',
 		};
 	},
 	
 	onPathKeyDown: function( event ) {
-	    if( event.which == 13 )
+        if( event.which == 13 ) {   //  Enter on path field.
 	    	this.setState( { path: this.state.pathInputValue } );
+            event.stopPropagation();
+        }
 	},
+    
+    onKeyDown: function( event ) {
+        if ( event.which == 13 ) {  //  Enter on the dialog itself (select)
+            this.onAccept();
+        }
+    },
 	
 	onPathInputChange: function( event ) {
 		this.setState( {
 			pathInputValue: event.target.value,
 		} );
 	},
+    
+    onSearchInputChange: function( event ) {
+        this.setState( {
+            search: event.target.value,
+        } );
+    },
 	
 	setPath: function( path ) {
-		this.setState( {
+        if ( path == this.state.path )
+            return;
+        
+        this.setState( {
 			path: path,
-			pathInputValue: path 
+			pathInputValue: path,
+            search: '',
 		} );
+        
+        this.refs.search.getDOMNode().focus();
 	},
 	
 	fullPath: function( filename ) {
@@ -82,21 +103,29 @@ var FileDialog = React.createClass( {
     
     componentDidMount: function() {
         this.getDOMNode().showModal();
+        this.refs.search.getDOMNode().focus();
     },
-	
+    
 	render: function() {
         FileDialog.lastPath = this.state.path;
     
 		return (
-			<dialog className="dialog file-dialog">
+			<dialog className="dialog file-dialog" tabOrder="0" onKeyDown={ this.onKeyDown }>
 				<span className="title">
 					Open File
 				</span>
 				<div className="content">
 					<div className="top-bar">
-						<input className="path" type="text" value={ this.state.pathInputValue } onChange={ this.onPathInputChange } onKeyDown={ this.onPathKeyDown } />
-						<button className="up fa fa-level-up" title="Parent Directory" onClick={ this.onLevelUpClick }></button>
-						<button className="refresh fa fa-refresh" title="Refresh" onClick={ this.onRefreshClick }></button>
+                        <input
+                            className="path"
+                            type="text"
+                            value={ this.state.pathInputValue }
+                            onChange={ this.onPathInputChange }
+                            onKeyDown={ this.onPathKeyDown }
+                            ref="pathBox"
+                        />
+						<button className="up fa fa-level-up" title="Parent Directory" tabOrder="-1" onClick={ this.onLevelUpClick }></button>
+						<button className="refresh fa fa-refresh" title="Refresh" tabOrder="-1" onClick={ this.onRefreshClick }></button>
 					</div>
 					<div className="columns">
 						<div className="folders">
@@ -105,11 +134,21 @@ var FileDialog = React.createClass( {
 							</ul>
 						</div>
 						<div className="files">
-							<FileTable path={ this.state.path } onChoose={ this.onAccept } ref="filetable" />
+                            <div className="search-bar">
+                                <input
+                                    className="search"
+                                    ref="search"
+                                    value={ this.state.search }
+                                    placeholder="Search" 
+                                    onChange={ this.onSearchInputChange }
+                                />
+                            </div>
+							<FileTable path={ this.state.path } onChoose={ this.onAccept } search={ this.state.search } ref="filetable" />
 						</div>
 					</div>
+                    
 					<div className="button-bar">
-						<button className="cancel" onClick={ this.onCancel }>Cancel</button>
+                        <button className="cancel" onClick={ this.onCancel }>Cancel</button>
 						<button className="ok" onClick={ this.onAccept }>OK</button>
 					</div>
 				</div>

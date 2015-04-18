@@ -290,6 +290,20 @@ dialog.file-dialog {
 		background-color: white;
 		overflow: scroll;
 		position: relative;
+        
+        div.search-bar {
+            padding-right: 15px;
+            
+            input {
+                padding-left: 5px;
+                padding-right: 5px;
+                width: 100%;
+                
+                &::-webkit-input-placeholder::before {
+                    font-family: fontAwesome; content:'\f002  ';
+                }
+            }
+        }
 		
 		table {
 			width: 100%;

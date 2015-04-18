@@ -7,38 +7,46 @@ var FileTable = React.createClass( {
 		return {
 			loaded: false,
 			error: null,
-			path: this.props.path,
 			selected: {},
 			focusedFile: null,
+            rawEntries: null,
+            filenames: null,
 		};
 	},
 	
 	componentDidMount: function() {
 		this.load();
 	},
+    
+    componentWillReceiveProps: function( newProps ) {
+        if ( newProps.path != this.props.path )
+            this.forceLoad( newProps );
+        else if ( newProps.search != this.props.search )
+            this.applySortAndSearch( newProps );
+    },
 	
-	componentDidUpdate: function() {
-		if ( this.props.path != this.state.path ) {
-			this.forceLoad();
-		}
-	},
-	
-	forceLoad: function() {
+	forceLoad: function( props ) {
+        props = props || this.props;
+    
 		this.setState( {
 			loaded: false,
 			error: null,
-			path: this.props.path,
+			path: props.path,
 			selected: {},
 			focusedFile: null,
+            rawEntries: null,
+            filenames: null,
 		} );
-		this.load();
+		this.load( props );
 	},
 	
-	load: function() {
+	load: function( props ) {
+        props = props || this.props;
+        
         new ClientJobRequest( {
 			job: 'ls',
 			args: {
-				path: this.props.path,
+				path: props.path,
 			},
 			onSuccess: this.lsSuccess,
 			onFailure: this.lsFailure,
@@ -46,6 +54,7 @@ var FileTable = React.createClass( {
 	},
 	
 	lsSuccess: function( job, result ) {
+        //  Parse results.
 		for ( var i in result.r ) {
 			var entry = result.r[ i ];
             
@@ -59,12 +68,48 @@ var FileTable = React.createClass( {
                 entry.fileType = FileTypeManager.guessFileType( this.props.path + '/' + i );
             }
         }
-
-		this.setState( {
-			loaded: true,
-			entries: result.r
-		} );
+        
+        this.applySortAndSearch( this.props, result.r );
 	},
+    
+    applySortAndSearch: function( props, rawEntries ) {
+        props = props || this.props;
+        rawEntries = rawEntries || this.state.rawEntries;
+        
+        if ( ! rawEntries )
+            return;
+        
+        var filenames = Object.keys( rawEntries );
+		
+        if ( props.search ) {
+            //  Apply search if one is specified (search dictates order based on fuzzy matchness)
+            var f = new Fuse( filenames );
+            filenames = f.search( props.search ).map( function( index ) {
+                return filenames[ index ]; 
+            } );
+        } else {
+            //  Apply sorting
+            filenames.sort( function( a, b ) {
+                var aIsDir = ( rawEntries[ a ].f.indexOf( 'd' ) !== -1 );
+                var bIsDir = ( rawEntries[ b ].f.indexOf( 'd' ) !== -1 );
+
+                if ( aIsDir && ! bIsDir )
+                    return -1;
+                else if ( ! aIsDir && bIsDir )
+                    return 1;
+                else if ( a < b )
+                    return -1;
+                else
+                    return 1;
+            } );
+        }
+		
+        this.setState( {
+            loaded: true,
+            rawEntries: rawEntries,
+            filenames: filenames,
+        } );
+    },
 	
 	lsFailure: function( job, code, message ) {
 		this.setState( {
@@ -73,36 +118,32 @@ var FileTable = React.createClass( {
 		} );
 	},
 	
-	sortedFilenames: function() {
-		var entries = this.state.entries;
-		var rawFilenames = Object.keys( entries );
-		rawFilenames.sort( function( a, b ) {
-			var aIsDir = ( entries[ a ].f.indexOf( 'd' ) !== -1 );
-			var bIsDir = ( entries[ b ].f.indexOf( 'd' ) !== -1 );
-			
-			if ( aIsDir && ! bIsDir )
-				return -1;
-			else if ( ! aIsDir && bIsDir )
-				return 1;
-			else if ( a < b )
-				return -1;
-			else
-				return 1;
-		} );
-		return rawFilenames;
-	},
-	
 	chooseSelected: function() {
 		if ( this.props.onChoose )
 			this.props.onChoose( Object.key( this.state.selected ) );
 	},
 	
 	getSelected: function() {
+        if ( this.props.search && Object.keys( this.state.selected ).length == 0 ) {
+            if ( this.state.filenames && this.state.filenames.length > 0 ) {
+                return [ this.state.filenames[0] ];
+            }
+        }
+    
 		return Object.keys( this.state.selected );
 	},
+    
+    isSelected: function( filename ) {
+        if ( this.props.search && Object.keys( this.state.selected ).length == 0 ) {
+            if ( this.state.filenames && this.state.filenames.length > 0 ) {
+                return filename == this.state.filenames[0];
+            }
+        }
+        return this.state.selected[ filename ];
+    },
 	
 	isDirectory: function( filename ) {
-		var entry = this.state.entries[ filename ];
+		var entry = this.state.rawEntries[ filename ];
 		if ( ! entry )
 			return false;
 		else
@@ -128,7 +169,7 @@ var FileTable = React.createClass( {
 		//	Work out what's getting selected
 		var newSelection = [];
 		if ( event.shiftKey ) {
-			var sortedFilenames = this.sortedFilenames();
+			var sortedFilenames = this.state.filenames;
 			var lastIndex = sortedFilenames.indexOf( this.state.focusedFile );
 			if ( lastIndex < 0 )
 				lastIndex = 0;
@@ -164,13 +205,14 @@ var FileTable = React.createClass( {
 	},
 	
 	renderFile: function( filename, index ) {
-		var entry = this.state.entries[ filename ];
+		var entry = this.state.rawEntries[ filename ];
 		var isDir = entry.flags.d;
 		var isLink = entry.flags.l;
 		var isBroken = entry.flags.b;
         var fileType = entry.fileType;
+        var isSelected = this.isSelected( filename );
 		
-		var className = ( index % 2 == 0 ? 'first' : 'second' ) + ( this.state.selected[ filename ] ? ' selected' : '' );
+		var className = ( index % 2 == 0 ? 'first' : 'second' ) + ( isSelected ? ' selected' : '' );
 		var icon = ( isDir ? 'fa-folder' : 'fa-file' );
 		var iconColor = ( isDir ? '#f90' : '#fff' );
         
@@ -223,19 +265,22 @@ var FileTable = React.createClass( {
 		} else {
 			//	Grind up the files list into rows
 			var rows = [];
-			var filenames = this.sortedFilenames();
-			for ( var i = 0; i < filenames.length; i++ )
-				rows.push( this.renderFile( filenames[ i ], i ) );
-			
+			for ( var i = 0; i < this.state.filenames.length; i++ )
+				rows.push( this.renderFile( this.state.filenames[ i ], i ) );
+                
 			return (
 				<table className="files">
-					<tr className="head">
-						<th>Filename</th>
-                        <th className="info">Type</th>
-						<th className="info">Size</th>
-						<th className="info">Last Modified</th>
-					</tr>
-					{ rows }
+                    <thead>
+                        <tr className="head">
+                            <th>Filename</th>
+                            <th className="info">Type</th>
+                            <th className="info">Size</th>
+                            <th className="info">Last Modified</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+					   { rows }
+                    </tbody>
 				</table>
 			);
 		}
