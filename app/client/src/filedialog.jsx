@@ -37,6 +37,8 @@ var FileDialog = React.createClass( {
             this.selectAll( event.target );
         else if ( Keyboard.key_up == event.keyCode || Keyboard.key_down == event.keyCode )
             this.refs.filetable.onKeyDown( event );
+        else if ( Keyboard.key_escape == event.keyCode )
+            this.onCancel();
         else
             Keyboard.logKeyPress( event );
     },
