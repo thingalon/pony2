@@ -20,21 +20,23 @@ var FileDialog = React.createClass( {
 	},
 	
 	onPathKeyDown: function( event ) {
-        if( event.which == 13 ) {   //  Enter on path field.
+        if( event.which == Keyboard.key_enter ) {   //  Enter on path field.
 	    	this.setState( { path: this.state.pathInputValue } );
             event.stopPropagation();
         }
 	},
     
     onKeyDown: function( event ) {
-        var chord = Tools.findKeyChord( event );
+        var chord = Keyboard.findKeyChord( event );
         
-        if ( 13 == event.keyCode || 'go_in' == chord )
+        if ( Keyboard.key_enter == event.keyCode || 'go_in' == chord )
             this.onAccept();
         else if ( 'go_out' == chord )
             this.onLevelUpClick();
         else if ( 'select_all' == chord )
             this.selectAll( event.target );
+        else if ( Keyboard.key_up == event.keyCode || Keyboard.key_down == event.keyCode )
+            this.refs.filetable.onKeyDown( event );
     },
     
     selectAll: function( target ) {

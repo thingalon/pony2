@@ -149,12 +149,24 @@ var FileTable = React.createClass( {
 		else
 			return ( entry.f.indexOf( 'd' ) !== -1 );
 	},
-	
-	onRowClick: function( event ) {
+    
+    //  onKeyDown; not automatically detected; filetable expects its parent to pass in relevant keyboard events.
+    onKeyDown: function( event ) {
+        //  Handle up / down keys
+        if ( 38 == event.keyCode || 40 == event.keyCode ) {
+            var direction = ( 38 == event.keyCode ? -1 : 1 );
+            var rowIndex = this.state.filenames.indexOf( this.state.focusedFile ) + direction;
+            if ( rowIndex >= 0 && rowIndex <= this.state.filenames.length ) {
+                this.selectRow( rowIndex, event.ctrlKey | event.metaKey, event.shiftKey );
+            }
+        }
+    },
+    
+    onRowClick: function( event ) {
 		var filename = event.currentTarget.getAttribute( 'data-filename' );
-		var selected = this.state.selected;		
-
-		//	Detect double-click
+        var index = this.state.filenames.indexOf( filename );
+        
+        //	Detect double-click
 		if ( this.last_click ) {
 			var time = +new Date();
 			if ( time - this.last_click.time < 500 && filename == this.last_click.filename ) {
@@ -165,20 +177,26 @@ var FileTable = React.createClass( {
 			}
 		}
 		this.last_click = { time: +new Date(), filename: filename };
-		
+        
+        if ( index >= 0 )
+            this.selectRow( index, event.ctrlKey | event.metaKey, event.shiftKey );
+    },
+    
+    selectRow: function( index, ctrl, shift ) {
+    	var selected = this.state.selected;
+        var filename = this.state.filenames[ index ];
+        var changeAnchor = true;
+
 		//	Work out what's getting selected
 		var newSelection = [];
 		if ( event.shiftKey ) {
+            changeAnchor = false;
 			var sortedFilenames = this.state.filenames;
-			var lastIndex = sortedFilenames.indexOf( this.state.focusedFile );
+			var lastIndex = sortedFilenames.indexOf( this.state.anchorFile );
 			if ( lastIndex < 0 )
 				lastIndex = 0;
 			
-			var thisIndex = sortedFilenames.indexOf( filename );
-			if ( thisIndex < 0 )
-				return;
-				
-			newSelection = sortedFilenames.slice( Math.min( lastIndex, thisIndex ), Math.max( lastIndex, thisIndex ) + 1 );
+			newSelection = sortedFilenames.slice( Math.min( lastIndex, index ), Math.max( lastIndex, index ) + 1 );
 		} else {
 			newSelection = [ filename ];
 		}
@@ -198,10 +216,14 @@ var FileTable = React.createClass( {
 		}
 		
 		//	Apply.
-		this.setState( {
-			selected: selected,
-			focusedFile: filename,
-		} );
+        var state = {
+            selected: selected,
+            focusedFile: filename,
+        };
+        if ( changeAnchor )
+            state.anchorFile = filename;
+        
+		this.setState( state );
 	},
 	
 	renderFile: function( filename, index ) {
