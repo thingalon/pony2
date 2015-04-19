@@ -7,6 +7,12 @@ function TextConduit( path ) {
 	this.state = TextConduit.State.closed;
 	this.rfid = TextConduit.nextRfid++;
     this.changeBuffer = [];
+    this.undoing = 0;
+    this.stateChangeCb = [];
+    
+    this.revision = 0;
+    this.lastSavedRevision = 0;
+    this.unsavedChanges = false;
     
     //  Guess the syntax of this file. 
     var aceMode = ace.modelist.getModeForPath( this.path );
@@ -36,7 +42,7 @@ TextConduit.State = {
 };
 
 TextConduit.prototype.onStateChange = function( callback ) {
-	this.stateChangeCb = callback;
+	this.stateChangeCb.push( callback );
 };
 
 TextConduit.prototype.getState = function() {
@@ -49,8 +55,8 @@ TextConduit.prototype.setState = function( newState ) {
 	
 	this.state = newState;
 	
-	if ( this.stateChangeCb )
-		this.stateChangeCb( this );
+	for ( var i = 0; i < this.stateChangeCb.length; i++ )
+        this.stateChangeCb[ i ]( this );
 };
 
 TextConduit.prototype.open = function() {
@@ -74,6 +80,21 @@ TextConduit.prototype.openSuccess = function( job, result ) {
     this.document = new ace.Document( result.r.content );
     this.document.on( 'change', this.onDocumentChange.bind( this ) );
     
+    //  Wrap up my own update manager to catch undos.
+    var conduit = this;
+    var MyUndoManager = function() {
+        this.innerUndo = this.undo;
+        this.undo = function() {
+            conduit.undoing++;
+            this.innerUndo();
+            conduit.undoing--;
+        };
+    
+        this.reset();
+    };
+    MyUndoManager.prototype = ace.UndoManager.prototype;
+    this.undoManager = new MyUndoManager();
+    
     this.setState( TextConduit.State.open );
 };
 
@@ -88,9 +109,28 @@ TextConduit.prototype.updateFailure = function( job, code, message ) {
 	console.log( "Failed to push an update to the server: " + code + " - " + message );
 };
 
+TextConduit.prototype.updateUnsavedState = function() {
+    var unsaved = ( this.revision != this.lastSavedRevision );
+    if ( unsaved != this.unsavedChanges ) {
+        this.unsavedChanges = unsaved;
+        for ( var i = 0; i < this.stateChangeCb.length; i++ )
+            this.stateChangeCb[ i ]( this );
+    }
+};
+
+TextConduit.prototype.hasUnsavedChanges = function() {
+    return this.unsavedChanges;
+};
+
 TextConduit.prototype.onDocumentChange = function( details ) {
     var change = details.data;
     change.updated = ( new Date() ).getTime();
+    
+    if ( this.undoing )
+        this.revision--;
+    else
+        this.revision++;
+    this.updateUnsavedState();
     
     //  Convert row/col ranges to index positions and normalize.
     change.from = this.document.positionToIndex( change.range.start );
@@ -196,6 +236,7 @@ TextConduit.prototype.pushChanges = function() {
 
 TextConduit.prototype.save = function() {
     this.pushChanges();
+    var savingRevision = this.revision;
     
     new ClientJobRequest( {
 		job: 'save',
@@ -204,10 +245,11 @@ TextConduit.prototype.save = function() {
 			c: CryptoJS.MD5( this.document.getValue() ).toString( CryptoJS.enc.Hex ),
 		},
 		onSuccess: function() {
-			console.log( 'Saved!' );
-		},
+            this.lastSavedRevision = savingRevision;
+            this.updateUnsavedState();
+		}.bind( this ),
         onFailure: function( job, code, message ) {
             App.ui.messageBox( 'error', 'Failed to save!', 'Error: ' + message );
-        }
+        }.bind( this )
 	} );
 };

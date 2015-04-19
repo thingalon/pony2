@@ -80,6 +80,11 @@ ul.left-bar {
 					color: white;
 					background-color: #89b8ff;
 				}
+                
+                &.unsaved::after { 
+                    font-family: fontAwesome;
+                    content: ' \f005';
+                }
 			}
 		}
 	}
