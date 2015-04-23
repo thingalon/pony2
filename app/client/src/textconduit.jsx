@@ -236,19 +236,31 @@ TextConduit.prototype.pushChanges = function() {
 
 TextConduit.prototype.save = function() {
     this.pushChanges();
-    var savingRevision = this.revision;
+    this._save( false, this.document.getValue(), this.revision );
+},
+
+TextConduit.prototype._save = function( sendContent, content, revision ) {
+    var args = {
+        r: this.rfid,
+        c: CryptoJS.MD5( content ).toString( CryptoJS.enc.Hex ),
+    };
+    
+    if ( sendContent )
+        args.content = content;
     
     new ClientJobRequest( {
 		job: 'save',
-		args: {
-			r: this.rfid,
-			c: CryptoJS.MD5( this.document.getValue() ).toString( CryptoJS.enc.Hex ),
-		},
+		args: args,
 		onSuccess: function() {
-            this.lastSavedRevision = savingRevision;
+            this.lastSavedRevision = revision;
             this.updateUnsavedState();
 		}.bind( this ),
         onFailure: function( job, code, message ) {
+            if ( 'CHECKSUM_MISMATCH' == code && ! sendContent ) {
+                console.log( 'Checksum mismatch detected! Jamming content down the wire.' );
+                return this._save( true, content, revision );
+            }
+
             App.ui.messageBox( 'error', 'Failed to save!', 'Error: ' + message );
         }.bind( this )
 	} );

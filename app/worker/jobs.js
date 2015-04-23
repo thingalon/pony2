@@ -118,7 +118,7 @@ Jobs.save = function( message, success, failure ) {
     if ( ! fb )
         return failure( message, 'internal_error', 'Unrecognized rfid: ' + message.a.r );
     
-    fb.save( message.a.c, function onSuccess() {
+    fb.save( message.a.content, message.a.c, function onSuccess() {
         success( message, {} );
     }, function onFailure( errorCode, errorString ) { 
         failure( message, errorCode, errorString );

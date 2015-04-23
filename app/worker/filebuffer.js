@@ -44,9 +44,13 @@ FileBuffer.prototype.modify = function( details ) {
         this.content = this.content.substr( 0, details.p ) + details.t + this.content.substr( details.p );
 };
 
-FileBuffer.prototype.save = function( checksum, success, failure ) {
+FileBuffer.prototype.save = function( content, checksum, success, failure ) {
+    if ( content )
+        this.content = content;
+    
     if ( this.getChecksum() != checksum )
         return failure( 'CHECKSUM_MISMATCH', 'The remote FileBuffer has a different checksum :(' );
+    
     fs.writeFile( this.path, this.content, function( err ) {
         if ( err )
             return failure( err );
